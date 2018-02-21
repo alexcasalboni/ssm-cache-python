@@ -114,6 +114,8 @@ def lambda_handler(event, context):
 
 The retry logic shown above can be simplified with the decorator method provided by each `SSMParameter` object.
 
+The `@param.refresh_on_error` will intercept raised errors (or a specific `error_class`, if given), refresh the parameters values, and attempt to re-call the decorated function. Optionally, you can provide a `callback` argument to implement your own logic (in the example below, to create a new db client with the new password).
+
 ```python
 from ssm_cache import SSMParameter
 from my_db_lib import Client, InvalidCredentials  # pseudo-code
