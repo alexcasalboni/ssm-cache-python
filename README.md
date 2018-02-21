@@ -32,7 +32,7 @@ You can configure the `max_age` in seconds, after which the values will be autom
 
 ```python
 from ssm_cache import SSMParameter
-param = SSMParameter('my_param_name', max_age=300)
+param = SSMParameter('my_param_name', max_age=300)  # 5 min
 value = param.value()
 ```
 
@@ -66,8 +66,8 @@ If you need different cache behaviour for each parameter, you can simply create 
 
 ```python
 from ssm_cache import SSMParameter
-param_1 = SSMParameter('param_1', max_age=300)
-param_2 = SSMParameter('param_2', max_age=3600)
+param_1 = SSMParameter('param_1', max_age=300)  # 5 min
+param_2 = SSMParameter('param_2', max_age=3600)  # 1 hour
 value_1 = param_1.value()
 value_2 = param_2.value()
 ```
