@@ -16,7 +16,9 @@ pip install ssm-cache
 
 ## How to use it
 
-Simplest use case:
+### Simplest use case
+
+A single parameter, configured by name.
 
 ```python
 from ssm_cache import SSMParameter
@@ -24,7 +26,9 @@ param = SSMParameter('my_param_name')
 value = param.value()
 ```
 
-With cache invalidation (max age):
+### With cache invalidation
+
+You can configure the `max_age` in seconds, after which the values will be automatically refreshed.
 
 ```python
 from ssm_cache import SSMParameter
@@ -32,7 +36,9 @@ param = SSMParameter('my_param_name', max_age=300)
 value = param.value()
 ```
 
-With multiple parameters:
+### With multiple parameters
+
+You can configure more than one parameter to be fetched/cached together.
 
 ```python
 from ssm_cache import SSMParameter
@@ -42,7 +48,9 @@ value_1, value_2 = params.values()
 value_1 = params.value('param_1')
 ```
 
-Explicit refresh:
+### Explicit refresh
+
+You can manually force a refresh for all the configured parameters.
 
 ```python
 from ssm_cache import SSMParameter
@@ -52,7 +60,9 @@ param.refresh()
 new_value = param.value()
 ```
 
-Multiple cache behaviors:
+### Multiple cache behaviors
+
+If you need different cache behaviour for each parameter, you can simply create more than one `SSMParameter` object.
 
 ```python
 from ssm_cache import SSMParameter
@@ -62,7 +72,9 @@ value_1 = param_1.value()
 value_2 = param_2.value()
 ```
 
-Without decryption (it's enabled by default):
+### Without decryption
+
+Decryption is enabled by default, but you can explicitly disable it.
 
 ```python
 from ssm_cache import SSMParameter
@@ -72,7 +84,7 @@ value = param.value()
 
 ## Usage with AWS Lambda
 
-Your Lambda code will look similar to the following snippet:
+Your AWS Lambda code will look similar to the following snippet.
 
 ```python
 from ssm_cache import SSMParameter
@@ -86,7 +98,9 @@ def lambda_handler(event, context):
 
 ## Complex invalidation based on "signals"
 
-You may want to explicitly refresh the parameter cache when you believe the cached value expired:
+You may want to explicitly refresh the parameter cache when you believe the cached value expired.
+
+In the example below, we refresh the parameter value when an `InvalidCredentials` exception is detected (see the [decorator utility](#decorator-utility) for a simpler version!).
 
 ```python
 from ssm_cache import SSMParameter
