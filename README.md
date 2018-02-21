@@ -1,5 +1,5 @@
 AWS System Manager Parameter Store Caching Client (Python)
-=================
+==========================================================
 
 
 This module wraps the AWS Parameter Store and adds a caching layer with max-age invalidation.
@@ -99,14 +99,10 @@ def read_record(is_retry=False):
     try:
         return my_db_client.read_record()
     except InvalidCredentials:
-        # avoid infinite recursion
-        if not is_retry:
-            # force parameter refresh
-            param.refresh()
-            # re-configure db client
-            my_db_client = Client(password=param.value())
-            # let's try again :)
-            return read_record(is_retry=True)
+        if not is_retry:  # avoid infinite recursion
+            param.refresh()  # force parameter refresh
+            my_db_client = Client(password=param.value())  # re-configure db client
+            return read_record(is_retry=True)  # let's try again :)
 
 def lambda_handler(event, context):
     return {
