@@ -1,5 +1,6 @@
 """ Cache module that implements the SSM caching wrapper """
 from datetime import datetime, timedelta
+from functools import wraps
 import boto3
 
 
@@ -77,3 +78,17 @@ class SSMParameter(object):
             names = self._names
         return [self.value(name) for name in names]
 
+    def refresh_on_error(self, error_class=Exception, error_callback=None, retry_argument='is_retry'):
+        def true_decorator(f):
+            @wraps(f)
+            def wrapped(*args, **kwargs):
+                try:
+                    return f(*args, **kwargs)
+                except error_class:
+                    self.refresh()
+                    if callable(error_callback):
+                        error_callback()
+                    kwargs[retry_argument] = True
+                    return f(*args, **kwargs)
+            return wrapped
+        return true_decorator
