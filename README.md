@@ -110,19 +110,24 @@ def lambda_handler(event, context):
     }
 ```
 
-## Upcoming improvements
+## Decorator utility
 
-The retry logic shown above could be drastically simplified with an ad-hoc decorator. With the upcoming improvement, your code might look as follows:
+The retry logic shown above can be drastically simplified with an ad-hoc decorator provided by each `SSMParameter` object. Your code will look as follows:
 
 ```python
 from ssm_cache import SSMParameter
-from my_db_lib import Client, InvalidCredentials
+from my_db_lib import Client, InvalidCredentials  # pseudo-code
 param = SSMParameter('my_db_password')
 
 def build_client():
-    my_db_client = Client(password=param.value())
+    return Client(password=param.value())
 
-@param.refresh_on_error(InvalidCredentials, build_client)
+def on_error_callback():
+    my_db_client = build_client()
+
+my_db_client = build_client()
+
+@param.refresh_on_error(InvalidCredentials, on_error_callback)
 def read_record(is_retry=False):
     return my_db_client.read_record()
 
@@ -153,7 +158,7 @@ nosetests
 Generate a coverage report:
 
 ```bash
-nosetests --with-coverage --cover-erase --cover-html --cover-package=cache
+nosetests --with-coverage --cover-erase --cover-html --cover-package=ssm_cache
 open cover/index.html
 ```
 
