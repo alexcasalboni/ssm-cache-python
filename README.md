@@ -1,4 +1,3 @@
-=================
 AWS System Manager Parameter Store Caching Client (Python)
 =================
 
