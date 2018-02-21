@@ -133,3 +133,33 @@ def lambda_handler(event, context):
         'record': read_record(),
     }
 ```
+
+## How to contribute
+
+Clone this repository, create a virtualenv and install all the dev dependencies:
+
+```bash
+git clone https://github.com/alexcasalboni/ssm-cache-python.git
+cd ssm-cache-python
+virtualenv env
+source env/bin/activate
+pip install -r requirements-dev.txt
+```
+
+You can run tests as follows:
+
+```bash
+nosetests
+```
+
+With coverage
+
+```bash
+nosetests --with-coverage --cover-erase --cover-package=cache --cover-html
+open cover/index.html
+```
+
+## References and articles
+
+* [You should use SSM Parameter Store over Lambda env variables](https://hackernoon.com/you-should-use-ssm-parameter-store-over-lambda-env-variables-5197fc6ea45b) by Yan Cui (similar Node.js implementation)
+* [AWS System Manager Parameter Store doc](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html)
