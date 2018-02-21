@@ -91,8 +91,8 @@ You may want to explicitly refresh the parameter cache when you believe the cach
 ```python
 from ssm_cache import SSMParameter
 from my_db_lib import Client, InvalidCredentials  # pseudo-code
-param = SSMParameter('my_db_password')
 
+param = SSMParameter('my_db_password')
 my_db_client = Client(password=param.value())
 
 def read_record(is_retry=False):
@@ -112,20 +112,17 @@ def lambda_handler(event, context):
 
 ## Decorator utility
 
-The retry logic shown above can be drastically simplified with an ad-hoc decorator provided by each `SSMParameter` object. Your code will look as follows:
+The retry logic shown above can be simplified with the decorator method provided by each `SSMParameter` object. Your code will look as follows:
 
 ```python
 from ssm_cache import SSMParameter
 from my_db_lib import Client, InvalidCredentials  # pseudo-code
-param = SSMParameter('my_db_password')
 
-def build_client():
-    return Client(password=param.value())
+param = SSMParameter('my_db_password')
+my_db_client = Client(password=param.value())
 
 def on_error_callback():
-    my_db_client = build_client()
-
-my_db_client = build_client()
+    my_db_client = Client(password=param.value())
 
 @param.refresh_on_error(InvalidCredentials, on_error_callback)
 def read_record(is_retry=False):
