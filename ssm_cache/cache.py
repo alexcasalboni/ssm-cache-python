@@ -1,11 +1,13 @@
+""" Cache module that implements the SSM caching wrapper """
 from datetime import datetime, timedelta
 import boto3
 
 
 class InvalidParam(Exception):
-    pass
+    """ Raised when something's wrong with the provided param name """
 
 class SSMParameter(object):
+    """ The class wraps an SSM Parameter and adds optional caching """
 
     ssm_client = boto3.client('ssm')
 
@@ -32,7 +34,7 @@ class SSMParameter(object):
         return datetime.utcnow() > self._last_refresh_time + self._max_age_delta
 
     def refresh(self):
-        # TODO handle specific errors (e.g. KMS permissions if encrypted)
+        """ Force refresh of the configured param names """
         response = self.ssm_client.get_parameters(
             Names=self._names,
             WithDecryption=self._with_decryption,
@@ -46,6 +48,10 @@ class SSMParameter(object):
         self._last_refresh_time = datetime.utcnow()
 
     def value(self, name=None):
+        """
+            Retrieve the value of a given param name.
+            If only one name is configured, the name can be omitted.
+        """
         # transform single string into list (syntactic sugar)
         if name is None:
             # name is required, unless only one parameter is configured
@@ -61,9 +67,12 @@ class SSMParameter(object):
             return self._values[name]
         except KeyError:
             raise InvalidParam("Param '%s' does not exist" % name)
-    
+
     def values(self, names=None):
-        # return all values if no name is given
+        """
+            Retrieve a list of values.
+            If no name is provided, all values are returned.
+        """
         if not names:
             names = self._names
         return [self.value(name) for name in names]

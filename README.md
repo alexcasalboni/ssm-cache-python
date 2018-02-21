@@ -159,6 +159,12 @@ nosetests --with-coverage --cover-erase --cover-html --cover-package=cache
 open cover/index.html
 ```
 
+Run pylint:
+
+```bash
+pylint ssm_cache
+```
+
 ## References and articles
 
 * [You should use SSM Parameter Store over Lambda env variables](https://hackernoon.com/you-should-use-ssm-parameter-store-over-lambda-env-variables-5197fc6ea45b) by Yan Cui (similar Node.js implementation)
