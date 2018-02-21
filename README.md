@@ -1,4 +1,7 @@
-# AWS System Manager Parameter Store Caching Client (Python)
+=================
+AWS System Manager Parameter Store Caching Client (Python)
+=================
+
 
 This module wraps the AWS Parameter Store and adds a caching layer with max-age invalidation.
 
