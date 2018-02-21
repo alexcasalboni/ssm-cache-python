@@ -90,7 +90,7 @@ class TestSSMCacheDecorator(TestBase):
         with self.assertRaises(Exception) as cm:
             my_function()
         
-        self.assertEqual(unicode(cm.exception), "True")
+        self.assertEqual(str(cm.exception), "True")
 
     def test_decorator_all_together(self):
         """ All the decorator features should work together """

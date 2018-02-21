@@ -1,6 +1,8 @@
 """ Cache module that implements the SSM caching wrapper """
+from __future__ import print_function
 from datetime import datetime, timedelta
 from functools import wraps
+from past.builtins import basestring
 import boto3
 
 
