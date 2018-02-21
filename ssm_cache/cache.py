@@ -78,17 +78,25 @@ class SSMParameter(object):
             names = self._names
         return [self.value(name) for name in names]
 
-    def refresh_on_error(self, error_class=Exception, error_callback=None, retry_argument='is_retry'):
-        def true_decorator(f):
-            @wraps(f)
+    def refresh_on_error(
+            self,
+            error_class=Exception,
+            error_callback=None,
+            retry_argument='is_retry'
+        ):
+        """ Decorator to handle errors and retries """
+        def true_decorator(func):
+            """ Actual func wrapper """
+            @wraps(func)
             def wrapped(*args, **kwargs):
+                """ Actual error/retry handling """
                 try:
-                    return f(*args, **kwargs)
+                    return func(*args, **kwargs)
                 except error_class:
                     self.refresh()
                     if callable(error_callback):
                         error_callback()
                     kwargs[retry_argument] = True
-                    return f(*args, **kwargs)
+                    return func(*args, **kwargs)
             return wrapped
         return true_decorator
