@@ -1,32 +1,19 @@
 import os
 import sys
-import unittest
 from datetime import datetime, timedelta
-from moto import mock_ssm
 import boto3
+from moto import mock_ssm
+from . import TestBase
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ssm_cache import SSMParameter, InvalidParam
 
-
 @mock_ssm
-class TestSSMCache(unittest.TestCase):
-
-    PARAM_VALUE = "abc123"
+class TestSSMCache(TestBase):
 
     def setUp(self):
-        self.ssm_client = boto3.client('ssm')
         names = ["my_param", "my_param_1", "my_param_2", "my_param_3"]
         self._create_params(names)
-    
-    def _create_params(self, names, value=PARAM_VALUE):
-        for name in names:
-            self.ssm_client.put_parameter(
-                Name=name,
-                Value=value,
-                Type="String",
-                Overwrite=True,
-            )
 
     def test_creation(self):
         # single string
