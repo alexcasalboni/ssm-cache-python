@@ -4,7 +4,7 @@ with open("README.md", 'r') as f:
     long_description = f.read()
 
 setup(
-    name='ssm_cache',
+    name='ssm-cache',
     version='0.1',
     description='AWS System Manager Parameter Store caching client for Python',
     long_description=long_description,
