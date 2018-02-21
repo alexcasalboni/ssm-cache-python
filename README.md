@@ -152,10 +152,10 @@ You can run tests as follows:
 nosetests
 ```
 
-With coverage
+Generate a coverage report:
 
 ```bash
-nosetests --with-coverage --cover-erase --cover-package=cache --cover-html
+nosetests --with-coverage --cover-erase --cover-html --cover-package=cache
 open cover/index.html
 ```
 
