@@ -8,7 +8,7 @@ You can use this module with AWS Lambda to read and refresh sensitive parameters
 
 Install the module as follows:
 
-```
+```bash
 pip install ssm-cache
 ```
 
@@ -16,7 +16,7 @@ pip install ssm-cache
 
 Simplest use case:
 
-```
+```python
 from ssm_cache import SSMParameter
 param = SSMParameter('my_param_name')
 value = param.value()
@@ -24,7 +24,7 @@ value = param.value()
 
 With cache invalidation (max age):
 
-```
+```python
 from ssm_cache import SSMParameter
 param = SSMParameter('my_param_name', max_age=300)
 value = param.value()
@@ -32,7 +32,7 @@ value = param.value()
 
 With multiple parameters:
 
-```
+```python
 from ssm_cache import SSMParameter
 param = SSMParameter(['param_1', 'param_2'])
 value_1, value_2 = param.values()
@@ -42,7 +42,7 @@ value_1 = param.value('param_1')
 
 Explicit refresh:
 
-```
+```python
 from ssm_cache import SSMParameter
 param = SSMParameter('my_param_name')
 value = param.value()
@@ -52,7 +52,7 @@ new_value = param.value()
 
 Multiple cache behaviors:
 
-```
+```python
 from ssm_cache import SSMParameter
 param_1 = SSMParameter('param_1', max_age=300)
 param_2 = SSMParameter('param_2', max_age=3600)
@@ -64,7 +64,7 @@ value_2 = param_2.value()
 
 Your Lambda code will look similar to the following snippet:
 
-```
+```python
 from ssm_cache import SSMParameter
 param = SSMParameter('my_param_name')
 
@@ -78,7 +78,7 @@ def lambda_handler(event, context):
 
 You may want to explicitly refresh the parameter cache when you believe the cached value expired:
 
-```
+```python
 from ssm_cache import SSMParameter
 from my_db_lib import Client, InvalidCredentials
 param = SSMParameter('my_db_password')
@@ -108,7 +108,7 @@ def lambda_handler(event, context):
 
 The retry logic shown above could be drastically simplified with an ad-hoc decorator. With the upcoming improvement, your code might look as follows:
 
-```
+```python
 from ssm_cache import SSMParameter
 from my_db_lib import Client, InvalidCredentials
 param = SSMParameter('my_db_password')
