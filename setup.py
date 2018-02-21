@@ -16,7 +16,7 @@ setup(
     author='Alex Casalboni',
     author_email='alex@alexcasalboni.com',
     url='https://github.com/alexcasalboni/ssm-cache-python',
-    download_url='https://github.com/alexcasalboni/ssm-cache-python/archive/0.1.tar.gz',
+    download_url='https://github.com/alexcasalboni/ssm-cache-python/archive/1.0.tar.gz',
     packages=find_packages(),
     install_requires=['awscli==1.14.43']
 )
