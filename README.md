@@ -8,7 +8,7 @@ You can use this module with AWS Lambda to read and refresh sensitive parameters
 
 ## How to install
 
-Install the module as follows:
+Install the module with `pip`:
 
 ```bash
 pip install ssm-cache
@@ -112,7 +112,7 @@ def lambda_handler(event, context):
 
 ## Decorator utility
 
-The retry logic shown above can be simplified with the decorator method provided by each `SSMParameter` object. Your code will look as follows:
+The retry logic shown above can be simplified with the decorator method provided by each `SSMParameter` object.
 
 ```python
 from ssm_cache import SSMParameter
@@ -146,7 +146,7 @@ source env/bin/activate
 pip install -r requirements-dev.txt
 ```
 
-You can run tests as follows:
+You can run tests with `nose`:
 
 ```bash
 nosetests
