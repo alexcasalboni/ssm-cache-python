@@ -34,10 +34,10 @@ With multiple parameters:
 
 ```python
 from ssm_cache import SSMParameter
-param = SSMParameter(['param_1', 'param_2'])
-value_1, value_2 = param.values()
+params = SSMParameter(['param_1', 'param_2'])
+value_1, value_2 = params.values()
 # or individually
-value_1 = param.value('param_1')
+value_1 = params.value('param_1')
 ```
 
 Explicit refresh:
@@ -60,6 +60,14 @@ value_1 = param_1.value()
 value_2 = param_2.value()
 ```
 
+Without decryption (it's enabled by default):
+
+```python
+from ssm_cache import SSMParameter
+param = SSMParameter('my_param_name', with_decryption=False)
+value = param.value()
+```
+
 ## Usage with AWS Lambda
 
 Your Lambda code will look similar to the following snippet:
@@ -80,7 +88,7 @@ You may want to explicitly refresh the parameter cache when you believe the cach
 
 ```python
 from ssm_cache import SSMParameter
-from my_db_lib import Client, InvalidCredentials
+from my_db_lib import Client, InvalidCredentials  # pseudo-code
 param = SSMParameter('my_db_password')
 
 my_db_client = Client(password=param.value())
