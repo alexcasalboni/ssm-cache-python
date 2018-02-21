@@ -1,0 +1,127 @@
+# AWS System Manager Parameter Store Caching Client (Python)
+
+This module wraps the AWS Parameter Store and adds a caching layer with max-age invalidation.
+
+You can use this module with AWS Lambda to read and refresh sensitive parameters. Your IAM role will require `ssm:GetParameters` permissions (optionally, also `kms:Decrypt` if you use `SecureString` params).
+
+## How to install
+
+Install the module as follows:
+
+```
+pip install ssm-cache
+```
+
+## How to use it
+
+Simplest use case:
+
+```
+from ssm_cache import SSMParameter
+param = SSMParameter('my_param_name')
+value = param.value()
+```
+
+With cache invalidation (max age):
+
+```
+from ssm_cache import SSMParameter
+param = SSMParameter('my_param_name', max_age=300)
+value = param.value()
+```
+
+With multiple parameters:
+
+```
+from ssm_cache import SSMParameter
+param = SSMParameter(['param_1', 'param_2'])
+value_1, value_2 = param.values()
+# or individually
+value_1 = param.value('param_1')
+```
+
+Explicit refresh:
+
+```
+from ssm_cache import SSMParameter
+param = SSMParameter('my_param_name')
+value = param.value()
+param.refresh()
+new_value = param.value()
+```
+
+Multiple cache behaviors:
+
+```
+from ssm_cache import SSMParameter
+param_1 = SSMParameter('param_1', max_age=300)
+param_2 = SSMParameter('param_2', max_age=3600)
+value_1 = param_1.value()
+value_2 = param_2.value()
+```
+
+## Usage with AWS Lambda
+
+Your Lambda code will look similar to the following snippet:
+
+```
+from ssm_cache import SSMParameter
+param = SSMParameter('my_param_name')
+
+def lambda_handler(event, context):
+    secret_value = param.value()
+    return 'Hello from Lambda with secret %s' % secret_value
+
+```
+
+## Complex invalidation based on "signals"
+
+You may want to explicitly refresh the parameter cache when you believe the cached value expired:
+
+```
+from ssm_cache import SSMParameter
+from my_db_lib import Client, InvalidCredentials
+param = SSMParameter('my_db_password')
+
+my_db_client = Client(password=param.value())
+
+def read_record(is_retry=False):
+    try:
+        return my_db_client.read_record()
+    except InvalidCredentials:
+        # avoid infinite recursion
+        if not is_retry:
+            # force parameter refresh
+            param.refresh()
+            # re-configure db client
+            my_db_client = Client(password=param.value())
+            # let's try again :)
+            return read_record(is_retry=True)
+
+def lambda_handler(event, context):
+    return {
+        'record': read_record(),
+    }
+```
+
+## Upcoming improvements
+
+The retry logic shown above could be drastically simplified with an ad-hoc decorator. With the upcoming improvement, your code might look as follows:
+
+```
+from ssm_cache import SSMParameter
+from my_db_lib import Client, InvalidCredentials
+param = SSMParameter('my_db_password')
+
+def build_client():
+    my_db_client = Client(password=param.value())
+
+@param.refresh_on_error(InvalidCredentials, build_client)
+def read_record(is_retry=False):
+    return my_db_client.read_record()
+
+def lambda_handler(event, context):
+    return {
+        'record': read_record(),
+    }
+```
