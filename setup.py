@@ -8,7 +8,7 @@ except(IOError, ImportError):
 
 setup(
     name='ssm-cache',
-    version='0.1',
+    version='1.0',
     description='AWS System Manager Parameter Store caching client for Python',
     long_description=long_description,
     keywords = ['aws', 'amazon-web-services', 'aws-lambda', 'aws-ssm', 'parameter-store'],
