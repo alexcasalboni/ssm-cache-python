@@ -23,7 +23,7 @@ A single parameter, configured by name.
 ```python
 from ssm_cache import SSMParameter
 param = SSMParameter('my_param_name')
-value = param.value()
+value = param.value
 ```
 
 ### With cache invalidation
@@ -32,54 +32,65 @@ You can configure the `max_age` in seconds, after which the values will be autom
 
 ```python
 from ssm_cache import SSMParameter
-param = SSMParameter('my_param_name', max_age=300)  # 5 min
-value = param.value()
-```
+param_1 = SSMParameter('param_1', max_age=300)  # 5 min
+value_1 = param.value
 
+param_2 = SSMParameter('param_2', max_age=3600)  # 1 hour
+value_2 = param_2.value
+```
 ### With multiple parameters
 
-You can configure more than one parameter to be fetched/cached together.
+You can configure more than one parameter to be fetched/cached (and decrypted or not) together.
 
 ```python
-from ssm_cache import SSMParameter
-params = SSMParameter(['param_1', 'param_2'])
-value_1, value_2 = params.values()
-# or individually
-value_1 = params.value('param_1')
+from ssm_cache import SSMParameterGroup
+group = SSMParameterGroup()
+param_1 = group.parameter('param_1')
+param_2 = group.parameter('param_2')
+
+value_1 = param_1.value
+value_2 = param_2.value
 ```
 
 ### Explicit refresh
 
-You can manually force a refresh for all the configured parameters.
+You can manually force a refresh on a parameter or parameter group.
+Note that if a parameter is part of a group, refreshing it will refresh the entire group.
 
 ```python
 from ssm_cache import SSMParameter
 param = SSMParameter('my_param_name')
-value = param.value()
+value = param.value
 param.refresh()
-new_value = param.value()
+new_value = param.value
 ```
 
-### Multiple cache behaviors
-
-If you need different cache behaviour for each parameter, you can simply create more than one `SSMParameter` object.
-
 ```python
-from ssm_cache import SSMParameter
-param_1 = SSMParameter('param_1', max_age=300)  # 5 min
-param_2 = SSMParameter('param_2', max_age=3600)  # 1 hour
-value_1 = param_1.value()
-value_2 = param_2.value()
+from ssm_cache import SSMParameterGroup
+group = SSMParameterGroup()
+param_1 = group.parameter('param_1')
+param_2 = group.parameter('param_2')
+
+value_1 = param_1.value
+value_2 = param_2.value
+
+group.refresh()
+new_value_1 = param_1.value
+new_value_2 = param_2.value
+
+param_1.refresh()
+new_new_value_1 = param_1.value
+new_new_value_2 = param_2.value # one parameter refreshes the whole group
 ```
 
 ### Without decryption
 
-Decryption is enabled by default, but you can explicitly disable it.
+Decryption is enabled by default, but you can explicitly disable it on either an SSMParameter or SSMGroup.
 
 ```python
 from ssm_cache import SSMParameter
 param = SSMParameter('my_param_name', with_decryption=False)
-value = param.value()
+value = param.value
 ```
 
 ## Usage with AWS Lambda
@@ -91,7 +102,7 @@ from ssm_cache import SSMParameter
 param = SSMParameter('my_param_name')
 
 def lambda_handler(event, context):
-    secret_value = param.value()
+    secret_value = param.value
     return 'Hello from Lambda with secret %s' % secret_value
 
 ```
@@ -107,7 +118,7 @@ from ssm_cache import SSMParameter
 from my_db_lib import Client, InvalidCredentials  # pseudo-code
 
 param = SSMParameter('my_db_password')
-my_db_client = Client(password=param.value())
+my_db_client = Client(password=param.value)
 
 def read_record(is_retry=False):
     try:
@@ -115,7 +126,7 @@ def read_record(is_retry=False):
     except InvalidCredentials:
         if not is_retry:  # avoid infinite recursion
             param.refresh()  # force parameter refresh
-            my_db_client = Client(password=param.value())  # re-configure db client
+            my_db_client = Client(password=param.value)  # re-configure db client
             return read_record(is_retry=True)  # let's try again :)
 
 def lambda_handler(event, context):
@@ -135,10 +146,10 @@ from ssm_cache import SSMParameter
 from my_db_lib import Client, InvalidCredentials  # pseudo-code
 
 param = SSMParameter('my_db_password')
-my_db_client = Client(password=param.value())
+my_db_client = Client(password=param.value)
 
 def on_error_callback():
-    my_db_client = Client(password=param.value())
+    my_db_client = Client(password=param.value)
 
 @param.refresh_on_error(InvalidCredentials, on_error_callback)
 def read_record(is_retry=False):

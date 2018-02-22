@@ -101,3 +101,6 @@ ENV/
 .mypy_cache/
 .vscode
 cover/
+
+# eclipse
+.*project

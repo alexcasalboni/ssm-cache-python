@@ -1,30 +1,27 @@
 """ Cache module that implements the SSM caching wrapper """
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 from datetime import datetime, timedelta
 from functools import wraps
-from past.builtins import basestring
+import six
+
 import boto3
+from botocore.exceptions import ClientError
 
-
-class InvalidParam(Exception):
+class InvalidParameterError(Exception):
     """ Raised when something's wrong with the provided param name """
 
-class SSMParameter(object):
-    """ The class wraps an SSM Parameter and adds optional caching """
+class Refreshable(object):
 
     ssm_client = boto3.client('ssm')
 
-    def __init__(self, param_names=None, max_age=None, with_decryption=True):
-        if isinstance(param_names, basestring):
-            param_names = [param_names]
-        if not param_names:
-            raise ValueError("At least one parameter should be configured")
-        self._names = param_names
-        self._values = {}
-        self._with_decryption = with_decryption
+    def __init__(self, max_age):
         self._last_refresh_time = None
         self._max_age = max_age
         self._max_age_delta = timedelta(seconds=max_age or 0)
+    
+    def _refresh(self):
+        raise NotImplementedError
 
     def _should_refresh(self):
         # never force refresh if no max_age is configured
@@ -35,51 +32,27 @@ class SSMParameter(object):
             return True
         # force refresh only if max_age seconds have expired
         return datetime.utcnow() > self._last_refresh_time + self._max_age_delta
-
+    
     def refresh(self):
-        """ Force refresh of the configured param names """
-        response = self.ssm_client.get_parameters(
-            Names=self._names,
-            WithDecryption=self._with_decryption,
-        )
-        # create a dict of name:value for each param
-        self._values = {
-            param['Name']: param['Value']
-            for param in response['Parameters']
-        }
+        self._refresh()
         # keep track of update date for max_age checks
         self._last_refresh_time = datetime.utcnow()
-
-    def value(self, name=None):
-        """
-            Retrieve the value of a given param name.
-            If only one name is configured, the name can be omitted.
-        """
-        # transform single string into list (syntactic sugar)
-        if name is None:
-            # name is required, unless only one parameter is configured
-            if len(self._names) == 1:
-                name = self._names[0]
-            else:
-                raise TypeError("Parameter name is required (None was given)")
-        if name not in self._names:
-            raise InvalidParam("Parameter %s is not configured" % name)
-        if name not in self._values or self._should_refresh():
-            self.refresh()
-        try:
-            return self._values[name]
-        except KeyError:
-            raise InvalidParam("Param '%s' does not exist" % name)
-
-    def values(self, names=None):
-        """
-            Retrieve a list of values.
-            If no name is provided, all values are returned.
-        """
-        if not names:
-            names = self._names
-        return [self.value(name) for name in names]
-
+    
+    @classmethod
+    def _get_parameters(cls, names, with_decryption):
+        values = {}
+        invalid_names = []
+        for name_batch in _batch(names, 10): # can only get 10 parameters at a time
+            response = cls.ssm_client.get_parameters(
+                Names=list(name_batch),
+                WithDecryption=with_decryption,
+            )
+            invalid_names.extend(response['InvalidParameters'])
+            for item in response['Parameters']:
+                values[item['Name']] = item['Value']
+        
+        return values, invalid_names
+    
     def refresh_on_error(
             self,
             error_class=Exception,
@@ -87,6 +60,8 @@ class SSMParameter(object):
             retry_argument='is_retry'
         ):
         """ Decorator to handle errors and retries """
+        if error_callback and not callable(error_callback):
+            raise TypeError("error_callback must be callable")
         def true_decorator(func):
             """ Actual func wrapper """
             @wraps(func)
@@ -96,9 +71,73 @@ class SSMParameter(object):
                     return func(*args, **kwargs)
                 except error_class:
                     self.refresh()
-                    if callable(error_callback):
+                    if error_callback:
                         error_callback()
-                    kwargs[retry_argument] = True
+                    if retry_argument:
+                        kwargs[retry_argument] = True
                     return func(*args, **kwargs)
             return wrapped
         return true_decorator
+
+class SSMParameterGroup(Refreshable):
+    def __init__(self, max_age=None, with_decryption=True):
+        super(SSMParameterGroup, self).__init__(max_age)
+        
+        self._with_decryption = with_decryption
+        self._parameters = {}
+    
+    def parameter(self, name):
+        if name in self._parameters:
+            return self._parameters[name]
+        parameter = SSMParameter(name)
+        parameter._group = self
+        self._parameters[name] = parameter
+        return parameter
+    
+    def _refresh(self):
+        names = [p._name for p in six.itervalues(self._parameters)]
+        values, invalid_names = self._get_parameters(names, self._with_decryption)
+        if invalid_names:
+            raise InvalidParameterError(",".join(invalid_names))
+        for parameter in six.itervalues(self._parameters):
+            parameter._value = values[parameter._name]
+
+class SSMParameter(Refreshable):
+    """ The class wraps an SSM Parameter and adds optional caching """
+
+    def __init__(self, param_name, max_age=None, with_decryption=True):
+        super(SSMParameter, self).__init__(max_age)
+        if not param_name:
+            raise ValueError("Must specify name")
+        self._name = param_name
+        self._value = None
+        self._with_decryption = with_decryption
+        self._group = None
+
+    def _refresh(self):
+        """ Force refresh of the configured param names """
+        if self._group:
+            return self._group.refresh()
+        
+        values, invalid_parameters = self._get_parameters([self._name], self._with_decryption)
+        if invalid_parameters:
+            raise InvalidParameterError(self.name)
+        self._value = values[self._name]
+        
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def value(self):
+        """ The value of a given param name. """
+        
+        if self._value is None or self._should_refresh():
+            self.refresh()
+        return self._value
+
+def _batch(iterable, n):
+    """Turn an iterable into an iterable of batches of size n (or less, for the last one)"""
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]

@@ -6,7 +6,7 @@ from moto import mock_ssm
 from . import TestBase
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from ssm_cache import SSMParameter, InvalidParam
+from ssm_cache import SSMParameter, SSMParameterGroup, InvalidParameterError
 
 class MySpecialError(Exception):
     """ Just for testing """
@@ -15,12 +15,24 @@ class MySpecialError(Exception):
 class TestSSMCacheDecorator(TestBase):
 
     def setUp(self):
-        names = ["my_param"]
+        names = ["my_param", "my_grouped_param"]
         self._create_params(names)
         self.cache = SSMParameter("my_param")
+        self.group = SSMParameterGroup()
+        self.grouped_param = self.group.parameter("my_grouped_param")
 
     def test_decorator_simple(self):
         @self.cache.refresh_on_error()
+        def my_function(is_retry=False):
+            if not is_retry:
+                raise Exception("raising an error")
+            else:
+                return "OK"
+        
+        self.assertEqual("OK", my_function())
+
+    def test_decorator_grouped_simple(self):
+        @self.group.refresh_on_error()
         def my_function(is_retry=False):
             if not is_retry:
                 raise Exception("raising an error")
