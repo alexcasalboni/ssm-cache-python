@@ -5,6 +5,8 @@ python:
   - 3.6
 env:
     - AWS_DEFAULT_REGION=eu-west-1
+    - AWS_ACCESS_KEY_ID=dummy
+    - AWS_SECRET_ACCESS_KEY=dummy
 install:
   - travis_retry pip install -r requirements-dev.txt
 script:
