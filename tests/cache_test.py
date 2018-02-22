@@ -6,7 +6,7 @@ from moto import mock_ssm
 from . import TestBase
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from ssm_cache import SSMParameter, SSMParameterGroup, InvalidParam
+from ssm_cache import SSMParameter, SSMParameterGroup, InvalidParameterError
 from ssm_cache.cache import Refreshable
 
 @mock_ssm
@@ -54,14 +54,13 @@ class TestSSMCache(TestBase):
 
     def test_unexisting(self):
         cache = SSMParameter("my_param_invalid_name")
-        with self.assertRaises(InvalidParam):
+        with self.assertRaises(InvalidParameterError):
             cache.value
 
     def test_main_with_expiration(self):
         cache = SSMParameter("my_param", max_age=300)  # 5 minutes expiration time
         my_value = cache.value
         self.assertEqual(my_value, self.PARAM_VALUE)
-
 
     def test_main_without_encryption(self):
         cache = SSMParameter("my_param", with_decryption=False)
