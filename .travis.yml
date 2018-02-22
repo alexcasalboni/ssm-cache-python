@@ -3,6 +3,8 @@ sudo: false
 python:
   - 2.7
   - 3.6
+env:
+    - AWS_DEFAULT_REGION=eu-west-1
 install:
   - travis_retry pip install -r requirements-dev.txt
 script:
