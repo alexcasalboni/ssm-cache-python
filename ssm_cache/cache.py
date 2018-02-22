@@ -6,6 +6,7 @@ from functools import wraps
 import six
 
 import boto3
+from botocore.exceptions import ClientError
 
 class InvalidParam(Exception):
     """ Raised when something's wrong with the provided param name """
@@ -43,7 +44,7 @@ class SSMParameterGroup(Refreshable):
         super(SSMParameterGroup, self).__init__(max_age)
         
         self._with_decryption = with_decryption
-        self._parameters = []
+        self._parameters = {}
     
     def parameter(self, *args, **kwargs):
         kwargs = kwargs.copy()
@@ -53,35 +54,34 @@ class SSMParameterGroup(Refreshable):
             kwargs['with_decryption'] = self._with_decryption
         parameter = SSMParameter(*args, **kwargs)
         parameter._group = self
-        self._parameters.append(parameter)
+        self._parameters[parameter._name] = parameter
         return parameter
     
     def _refresh(self):
         # use batch get
-        with_decryption = any(p._with_decryption for p in self._parameters)
-        names = [name for p in self._parameters for name in p._names]
-        values = {}
+        with_decryption = any(p._with_decryption for p in six.itervalues(self._parameters))
+        names = [p._name for p in six.itervalues(self._parameters)]
+        invalid_names = []
         for name_batch in _batch(names, 10): # can only get 10 parameters at a time
             response = self.ssm_client.get_parameters(
                 Names=name_batch,
                 WithDecryption=with_decryption,
             )
-            values.update({param['Name']: param['Value'] for param in response['Parameters']})
-        
-        for parameter in self._parameters:
-            parameter._values = {name: values[name] for name in parameter._names}
+            invalid_names.extend(response['InvalidParameters'])
+            for item in response['Parameters']:
+                self._parameters[item['Name']]._value = item['Value']
+        if invalid_names:
+            raise InvalidParam(",".join(invalid_names))
 
 class SSMParameter(Refreshable):
     """ The class wraps an SSM Parameter and adds optional caching """
 
-    def __init__(self, param_names=None, max_age=None, with_decryption=True):
+    def __init__(self, param_name, max_age=None, with_decryption=True):
         super(SSMParameter, self).__init__(max_age)
-        if isinstance(param_names, six.string_types):
-            param_names = [param_names]
-        if not param_names:
-            raise ValueError("At least one parameter should be configured")
-        self._names = param_names
-        self._values = {}
+        if not param_name:
+            raise ValueError("Must specify name")
+        self._name = param_name
+        self._value = None
         self._with_decryption = with_decryption
         self._group = None
 
@@ -89,46 +89,32 @@ class SSMParameter(Refreshable):
         """ Force refresh of the configured param names """
         if self._group:
             return self._group.refresh()
+        
+        try:
+            response = self.ssm_client.get_parameter(
+                Name=self._name,
+                WithDecryption=self._with_decryption,
+            )
+            self._value = response['Parameter']['Value']
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ParameterNotFound':
+                raise InvalidParam(self.name)
+            raise
+        
+    @property
+    def name(self):
+        return self._name
 
-        response = self.ssm_client.get_parameters(
-            Names=self._names,
-            WithDecryption=self._with_decryption,
-        )
-        # create a dict of name:value for each param
-        self._values = {
-            param['Name']: param['Value']
-            for param in response['Parameters']
-        }
-
-    def value(self, name=None):
+    @property
+    def value(self):
         """
             Retrieve the value of a given param name.
             If only one name is configured, the name can be omitted.
         """
-        # transform single string into list (syntactic sugar)
-        if name is None:
-            # name is required, unless only one parameter is configured
-            if len(self._names) == 1:
-                name = self._names[0]
-            else:
-                raise TypeError("Parameter name is required (None was given)")
-        if name not in self._names:
-            raise InvalidParam("Parameter %s is not configured" % name)
-        if name not in self._values or self._should_refresh():
+        
+        if self._value is None or self._should_refresh():
             self.refresh()
-        try:
-            return self._values[name]
-        except KeyError:
-            raise InvalidParam("Param '%s' does not exist" % name)
-
-    def values(self, names=None):
-        """
-            Retrieve a list of values.
-            If no name is provided, all values are returned.
-        """
-        if not names:
-            names = self._names
-        return [self.value(name) for name in names]
+        return self._value
 
     def refresh_on_error(
             self,
