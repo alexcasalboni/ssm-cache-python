@@ -6,12 +6,12 @@ from functools import wraps
 import six
 
 import boto3
-from botocore.exceptions import ClientError
 
 class InvalidParameterError(Exception):
     """ Raised when something's wrong with the provided param name """
 
 class Refreshable(object):
+    """ Abstract class for refreshable objects (with max-age) """
 
     ssm_client = boto3.client('ssm')
 
@@ -19,7 +19,7 @@ class Refreshable(object):
         self._last_refresh_time = None
         self._max_age = max_age
         self._max_age_delta = timedelta(seconds=max_age or 0)
-    
+
     def _refresh(self):
         raise NotImplementedError
 
@@ -32,12 +32,13 @@ class Refreshable(object):
             return True
         # force refresh only if max_age seconds have expired
         return datetime.utcnow() > self._last_refresh_time + self._max_age_delta
-    
+
     def refresh(self):
+        """ Updates the value(s) of this refreshable """
         self._refresh()
         # keep track of update date for max_age checks
         self._last_refresh_time = datetime.utcnow()
-    
+
     @classmethod
     def _get_parameters(cls, names, with_decryption):
         values = {}
@@ -50,9 +51,9 @@ class Refreshable(object):
             invalid_names.extend(response['InvalidParameters'])
             for item in response['Parameters']:
                 values[item['Name']] = item['Value']
-        
+
         return values, invalid_names
-    
+
     def refresh_on_error(
             self,
             error_class=Exception,
@@ -80,30 +81,39 @@ class Refreshable(object):
         return true_decorator
 
 class SSMParameterGroup(Refreshable):
+    """ Concrete class that wraps multiple SSM Parameters """
+
     def __init__(self, max_age=None, with_decryption=True):
         super(SSMParameterGroup, self).__init__(max_age)
-        
+
         self._with_decryption = with_decryption
         self._parameters = {}
-    
+
     def parameter(self, name):
+        """ Create a new SSMParameter by name (or retrieve an existing one) """
         if name in self._parameters:
             return self._parameters[name]
         parameter = SSMParameter(name)
-        parameter._group = self
+        parameter._group = self  # pylint: disable=protected-access
         self._parameters[name] = parameter
         return parameter
-    
+
     def _refresh(self):
-        names = [p._name for p in six.itervalues(self._parameters)]
+        names = [
+            p._name  # pylint: disable=protected-access
+            for p in six.itervalues(self._parameters)
+        ]
         values, invalid_names = self._get_parameters(names, self._with_decryption)
         if invalid_names:
             raise InvalidParameterError(",".join(invalid_names))
         for parameter in six.itervalues(self._parameters):
-            parameter._value = values[parameter._name]
+            parameter._value = values[parameter._name]  # pylint: disable=protected-access
+
+    def __len__(self):
+        return len(self._parameters)
 
 class SSMParameter(Refreshable):
-    """ The class wraps an SSM Parameter and adds optional caching """
+    """ Concrete class for an individual SSM Parameter """
 
     def __init__(self, param_name, max_age=None, with_decryption=True):
         super(SSMParameter, self).__init__(max_age)
@@ -118,26 +128,26 @@ class SSMParameter(Refreshable):
         """ Force refresh of the configured param names """
         if self._group:
             return self._group.refresh()
-        
+
         values, invalid_parameters = self._get_parameters([self._name], self._with_decryption)
         if invalid_parameters:
             raise InvalidParameterError(self.name)
         self._value = values[self._name]
-        
+
     @property
     def name(self):
+        """ Just an alias """
         return self._name
 
     @property
     def value(self):
         """ The value of a given param name. """
-        
         if self._value is None or self._should_refresh():
             self.refresh()
         return self._value
 
-def _batch(iterable, n):
+def _batch(iterable, num):
     """Turn an iterable into an iterable of batches of size n (or less, for the last one)"""
-    l = len(iterable)
-    for ndx in range(0, l, n):
-        yield iterable[ndx:min(ndx + n, l)]
+    length = len(iterable)
+    for ndx in range(0, length, num):
+        yield iterable[ndx:min(ndx + num, length)]

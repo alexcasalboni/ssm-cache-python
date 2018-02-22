@@ -80,6 +80,15 @@ class TestSSMCacheDecorator(TestBase):
         self.assertEqual("OK", my_function())
         self.assertEqual(1, callback.call_count)
 
+    def test_decorator_callback_invalid(self):
+        """ Error if non-collable callback """
+        
+        with self.assertRaises(TypeError):
+            @self.cache.refresh_on_error(Exception, "invalid_callable")
+            def my_function(is_retry=False):
+                pass
+        
+
     def test_decorator_retry_argument(self):
         """ Retry argument can be customized """
         
