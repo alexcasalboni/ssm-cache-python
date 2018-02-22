@@ -44,7 +44,7 @@ class Refreshable(object):
         invalid_names = []
         for name_batch in _batch(names, 10): # can only get 10 parameters at a time
             response = cls.ssm_client.get_parameters(
-                Names=name_batch,
+                Names=list(name_batch),
                 WithDecryption=with_decryption,
             )
             invalid_names.extend(response['InvalidParameters'])
@@ -86,25 +86,21 @@ class SSMParameterGroup(Refreshable):
         self._with_decryption = with_decryption
         self._parameters = {}
     
-    def parameter(self, *args, **kwargs):
-        kwargs = kwargs.copy()
-        if 'max_age' in kwargs:
-            raise ValueError("max_age can't be set individually for grouped parameters")
-        if 'with_decryption' not in kwargs:
-            kwargs['with_decryption'] = self._with_decryption
-        parameter = SSMParameter(*args, **kwargs)
+    def parameter(self, name):
+        if name in self._parameters:
+            return self._parameters[name]
+        parameter = SSMParameter(name)
         parameter._group = self
-        self._parameters[parameter._name] = parameter
+        self._parameters[name] = parameter
         return parameter
     
     def _refresh(self):
-        with_decryption = any(p._with_decryption for p in six.itervalues(self._parameters))
         names = [p._name for p in six.itervalues(self._parameters)]
-        values, invalid_names = self._get_parameters(names, with_decryption)
+        values, invalid_names = self._get_parameters(names, self._with_decryption)
         if invalid_names:
             raise InvalidParameterError(",".join(invalid_names))
-        for name, value in six.iteritems(values):
-            self._parameters[name]._value = value
+        for parameter in six.itervalues(self._parameters):
+            parameter._value = values[parameter._name]
 
 class SSMParameter(Refreshable):
     """ The class wraps an SSM Parameter and adds optional caching """
@@ -134,9 +130,7 @@ class SSMParameter(Refreshable):
 
     @property
     def value(self):
-        """ Retrieve the value of a given param name.
-        If only one name is configured, the name can be omitted.
-        """
+        """ The value of a given param name. """
         
         if self._value is None or self._should_refresh():
             self.refresh()

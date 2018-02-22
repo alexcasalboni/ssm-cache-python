@@ -40,7 +40,7 @@ value_2 = param_2.value
 ```
 ### With multiple parameters
 
-You can configure more than one parameter to be fetched/cached together.
+You can configure more than one parameter to be fetched/cached (and decrypted or not) together.
 
 ```python
 from ssm_cache import SSMParameterGroup
@@ -51,7 +51,6 @@ param_2 = group.parameter('param_2')
 value_1 = param_1.value
 value_2 = param_2.value
 ```
-The inputs to `SSMParameterGroup.parameter()` are passed to the SSMParameter constructor, but `max_age` isn't allowed.
 
 ### Explicit refresh
 
