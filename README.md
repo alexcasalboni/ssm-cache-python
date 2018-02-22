@@ -197,6 +197,13 @@ Run pylint:
 pylint ssm_cache
 ```
 
+
+## What's new?
+
+* **version 2.0**: new interface, `SSMParameterGroup` support
+* **version 1.3**: Python3 support
+* **version 1.0**: initial release
+
 ## References and articles
 
 * [You should use SSM Parameter Store over Lambda env variables](https://hackernoon.com/you-should-use-ssm-parameter-store-over-lambda-env-variables-5197fc6ea45b) by Yan Cui (similar Node.js implementation)
