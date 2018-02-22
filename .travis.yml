@@ -11,3 +11,4 @@ script:
   - nosetests
 after_success:
   - nosetests --with-coverage --cover-erase --cover-html --cover-package=ssm_cache
+  - coveralls
