@@ -1,6 +1,11 @@
 AWS System Manager Parameter Store Caching Client (Python)
 ==========================================================
 
+[![Build Status](https://travis-ci.org/alexcasalboni/ssm-cache-python.svg?branch=master)](https://travis-ci.org/alexcasalboni/ssm-cache-python)
+[![Coverage Status](https://coveralls.io/repos/github/alexcasalboni/ssm-cache-python/badge.svg)](https://coveralls.io/github/alexcasalboni/ssm-cache-python)
+[![PyPI version](https://badge.fury.io/py/ssm-cache.svg)](https://badge.fury.io/py/ssm-cache)
+
+
 
 This module wraps the AWS Parameter Store and adds a caching layer with max-age invalidation.
 
