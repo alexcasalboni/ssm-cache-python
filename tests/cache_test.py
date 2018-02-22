@@ -6,7 +6,8 @@ from moto import mock_ssm
 from . import TestBase
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from ssm_cache import SSMParameter, InvalidParam
+from ssm_cache import SSMParameter, SSMParameterGroup, InvalidParam
+from ssm_cache.cache import Refreshable
 
 @mock_ssm
 class TestSSMCache(TestBase):
@@ -32,13 +33,18 @@ class TestSSMCache(TestBase):
             SSMParameter(None)
         with self.assertRaises(ValueError):
             SSMParameter([])
+        
+        group = SSMParameterGroup()
+        parameter = group.parameter("my_param")
+        with self.assertRaises(ValueError):
+            group.parameter()
 
     def test_should_refresh(self):
         # without max age
-        cache = SSMParameter("my_param")
+        cache = Refreshable(None)
         self.assertFalse(cache._should_refresh())
         # with max age and no data
-        cache = SSMParameter("my_param", max_age=10)
+        cache = Refreshable(max_age=10)
         self.assertTrue(cache._should_refresh())
         # with max age and last refreshed date OK
         cache._last_refresh_time = datetime.utcnow()
@@ -94,6 +100,19 @@ class TestSSMCache(TestBase):
         self.assertEqual(my_value_1, self.PARAM_VALUE)
         self.assertEqual(my_value_2, self.PARAM_VALUE)
 
+    def test_main_with_param_group(self):
+        group = SSMParameterGroup()
+        param_1 = group.parameter("my_param_1")
+        param_2 = group.parameter("my_param_2")
+        param_3 = group.parameter("my_param_3")
+        # one by one
+        my_value_1 = param_1.value()
+        my_value_2 = param_2.value()
+        my_value_3 = param_3.value()
+        self.assertEqual(my_value_1, self.PARAM_VALUE)
+        self.assertEqual(my_value_2, self.PARAM_VALUE)
+        self.assertEqual(my_value_3, self.PARAM_VALUE)
+
     def test_main_with_explicit_refresh(self):
         cache = SSMParameter("my_param")  # will not expire
 
@@ -112,6 +131,29 @@ class TestSSMCache(TestBase):
             self._create_params(["my_param"], "new_value")
             cache.refresh()  # force refresh
             do_something()  # won't fail anymore
+
+    def test_main_with_explicit_refresh_of_group(self):
+        group = SSMParameterGroup()  # will not expire
+        param_1 = group.parameter("my_param_1")
+        param_2 = group.parameter("my_param_2")
+
+        class InvalidCredentials(Exception):
+            pass
+
+        def do_something():
+            my_value = param_1.value()
+            if my_value == self.PARAM_VALUE:
+                raise InvalidCredentials()
+
+        try:
+            do_something()
+        except InvalidCredentials:
+            # manually update value
+            NEW_VALUE = "new_value"
+            self._create_params(["my_param_1", "my_param_2"], NEW_VALUE)
+            param_1.refresh()  # force refresh
+            do_something()  # won't fail anymore
+            self.assertEqual(param_2.value(), NEW_VALUE)
 
     def test_main_lambda_handler(self):
         cache = SSMParameter("my_param")

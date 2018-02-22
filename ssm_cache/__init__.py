@@ -1,2 +1,2 @@
 """ Expose 'cache' submodule classes """
-from ssm_cache.cache import SSMParameter, InvalidParam
+from ssm_cache.cache import SSMParameter, SSMParameterGroup, InvalidParam
