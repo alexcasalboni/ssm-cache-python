@@ -93,7 +93,7 @@ class SSMParameterGroup(Refreshable):
         """ Create a new SSMParameter by name (or retrieve an existing one) """
         if name in self._parameters:
             return self._parameters[name]
-        parameter = SSMParameter(name)
+        parameter = SSMParameter(name, max_age=self._max_age)
         parameter._group = self  # pylint: disable=protected-access
         self._parameters[name] = parameter
         return parameter
@@ -123,6 +123,11 @@ class SSMParameter(Refreshable):
         self._value = None
         self._with_decryption = with_decryption
         self._group = None
+
+    def _should_refresh(self):
+        if self._group:
+            return self._group._should_refresh()
+        return super(SSMParameter, self)._should_refresh()
 
     def _refresh(self):
         """ Force refresh of the configured param names """
