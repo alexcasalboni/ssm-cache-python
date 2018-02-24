@@ -66,8 +66,8 @@ class SSMParameterStore(ParameterStore): # pylint: disable=too-few-public-method
             cls._CLIENT = client
         return cls._CLIENT
 
-    @classmethod
-    def _batch(cls, iterable, num):
+    @staticmethod
+    def _batch(iterable, num):
         """Turn an iterable into an iterable of batches of size n (or less, for the last one)"""
         length = len(iterable)
         for ndx in range(0, length, num):
