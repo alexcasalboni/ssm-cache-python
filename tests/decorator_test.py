@@ -6,7 +6,7 @@ from moto import mock_ssm
 from . import TestBase
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from ssm_cache import Parameter, ParameterGroup, InvalidParameterError
+from ssm_cache import SSMParameter, SSMParameterGroup, InvalidParameterError
 
 class MySpecialError(Exception):
     """ Just for testing """
@@ -17,8 +17,8 @@ class TestCacheDecorator(TestBase):
     def setUp(self):
         names = ["my_param", "my_grouped_param"]
         self._create_params(names)
-        self.cache = Parameter("my_param")
-        self.group = ParameterGroup()
+        self.cache = SSMParameter("my_param")
+        self.group = SSMParameterGroup()
         self.grouped_param = self.group.parameter("my_grouped_param")
 
     def test_decorator_simple(self):

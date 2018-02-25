@@ -1,4 +1,4 @@
-""" Cache module that implements the parameter caching wrapper """
+""" Cache module that implements the SSM caching wrapper """
 from __future__ import absolute_import, print_function
 
 from datetime import datetime, timedelta
@@ -68,21 +68,21 @@ class Refreshable(object):
             return wrapped
         return true_decorator
 
-class ParameterGroup(Refreshable):
-    """ Concrete class that wraps multiple parameters """
+class SSMParameterGroup(Refreshable):
+    """ Concrete class that wraps multiple SSM Parameters """
 
     def __init__(self, max_age=None, with_decryption=True, store=None):
-        super(ParameterGroup, self).__init__(max_age, store)
+        super(SSMParameterGroup, self).__init__(max_age, store)
 
         self._with_decryption = with_decryption
         self._parameters = {}
 
     def parameter(self, name):
-        """ Create a new Parameter by name (or retrieve an existing one) """
+        """ Create a new SSMParameter by name (or retrieve an existing one) """
         if name in self._parameters:
             return self._parameters[name]
-        parameter = Parameter(name)
-        parameter._group = self  # pylint: disable=protected-access
+        parameter = SSMParameter(name)
+        parameter._group = self # pylint: disable=protected-access
         self._parameters[name] = parameter
         return parameter
 
@@ -100,11 +100,11 @@ class ParameterGroup(Refreshable):
     def __len__(self):
         return len(self._parameters)
 
-class Parameter(Refreshable):
-    """ Concrete class for an individual parameter """
+class SSMParameter(Refreshable):
+    """ Concrete class for an individual SSM parameter """
 
     def __init__(self, param_name, max_age=None, with_decryption=True, store=None):
-        super(Parameter, self).__init__(max_age, store)
+        super(SSMParameter, self).__init__(max_age, store)
         if not param_name:
             raise ValueError("Must specify name")
         self._name = param_name

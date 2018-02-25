@@ -7,7 +7,7 @@ from moto import mock_ssm
 from . import TestBase
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from ssm_cache import Parameter, ParameterGroup, InvalidParameterError
+from ssm_cache import SSMParameter, SSMParameterGroup, InvalidParameterError
 from ssm_cache.cache import Refreshable
 from ssm_cache.ssm import SSMParameterStore
 from ssm_cache.env import EnvironmentParameterStore
@@ -18,7 +18,7 @@ class AlternateStore(object):
         return {names[0]: "alternative"}, []
 
 @mock_ssm
-class TestCache(TestBase):
+class TestSSMCache(TestBase):
 
     def setUp(self):
         names = ["my_param", "my_param_1", "my_param_2", "my_param_3"]
@@ -26,17 +26,17 @@ class TestCache(TestBase):
 
     def test_creation(self):
         # single string
-        cache = Parameter("my_param")
+        cache = SSMParameter("my_param")
         self.assertTrue(cache._with_decryption)
         self.assertIsNone(cache._max_age)
         self.assertIsNone(cache._last_refresh_time)
         # invalid params
         with self.assertRaises(TypeError):
-            Parameter()
+            SSMParameter()
         with self.assertRaises(ValueError):
-            Parameter(None)
+            SSMParameter(None)
         
-        group = ParameterGroup()
+        group = SSMParameterGroup()
         parameter = group.parameter("my_param")
         with self.assertRaises(TypeError):
             group.parameter()
@@ -61,17 +61,17 @@ class TestCache(TestBase):
             cache.refresh()
 
     def test_main(self):
-        cache = Parameter("my_param")
+        cache = SSMParameter("my_param")
         my_value = cache.value
         self.assertEqual(my_value, self.PARAM_VALUE)
 
     def test_unexisting(self):
-        cache = Parameter("my_param_invalid_name")
+        cache = SSMParameter("my_param_invalid_name")
         with self.assertRaises(InvalidParameterError):
             cache.value
 
     def test_unexisting_in_group(self):
-        group = ParameterGroup()
+        group = SSMParameterGroup()
         param_1 = group.parameter("my_param_1")
         param_2 = group.parameter("my_param_unexisting")
         with self.assertRaises(InvalidParameterError):
@@ -79,17 +79,17 @@ class TestCache(TestBase):
 
 
     def test_main_with_expiration(self):
-        cache = Parameter("my_param", max_age=300)  # 5 minutes expiration time
+        cache = SSMParameter("my_param", max_age=300)  # 5 minutes expiration time
         my_value = cache.value
         self.assertEqual(my_value, self.PARAM_VALUE)
 
     def test_main_without_encryption(self):
-        cache = Parameter("my_param", with_decryption=False)
+        cache = SSMParameter("my_param", with_decryption=False)
         my_value = cache.value
         self.assertEqual(my_value, self.PARAM_VALUE)
 
     def test_main_with_param_group(self):
-        group = ParameterGroup()
+        group = SSMParameterGroup()
         param_1 = group.parameter("my_param_1")
         param_2 = group.parameter("my_param_2")
         param_3 = group.parameter("my_param_3")
@@ -102,13 +102,13 @@ class TestCache(TestBase):
         self.assertEqual(my_value_3, self.PARAM_VALUE)
 
     def test_group_same_name(self):
-        group = ParameterGroup()
+        group = SSMParameterGroup()
         param_1 = group.parameter("my_param_1")
         param_1_again = group.parameter("my_param_1")
         self.assertEqual(1, len(group))
 
     def test_main_with_explicit_refresh(self):
-        cache = Parameter("my_param")  # will not expire
+        cache = SSMParameter("my_param")  # will not expire
 
         class InvalidCredentials(Exception):
             pass
@@ -127,7 +127,7 @@ class TestCache(TestBase):
             do_something()  # won't fail anymore
 
     def test_main_with_explicit_refresh_of_group(self):
-        group = ParameterGroup()  # will not expire
+        group = SSMParameterGroup()  # will not expire
         param_1 = group.parameter("my_param_1")
         param_2 = group.parameter("my_param_2")
 
@@ -150,7 +150,7 @@ class TestCache(TestBase):
             self.assertEqual(param_2.value, NEW_VALUE)
 
     def test_main_with_explicit_refresh_of_group_param(self):
-        group = ParameterGroup()  # will not expire
+        group = SSMParameterGroup()  # will not expire
         param_1 = group.parameter("my_param_1")
         param_2 = group.parameter("my_param_2")
 
@@ -173,7 +173,7 @@ class TestCache(TestBase):
             self.assertEqual(param_2.value, NEW_VALUE)
 
     def test_main_lambda_handler(self):
-        cache = Parameter("my_param")
+        cache = SSMParameter("my_param")
 
         def lambda_handler(event, context):
             secret_value = cache.value
@@ -186,15 +186,15 @@ class TestCache(TestBase):
     @patch('ssm_cache.ssm.SSMParameterStore._SESSION', new=None)
     @patch('ssm_cache.ssm.SSMParameterStore._CLIENT', new=None)
     def test_session_factory(self):
-        cache = Parameter("my_param")
+        cache = SSMParameter("my_param")
         my_value = cache.value
         self.assertEqual(my_value, self.PARAM_VALUE)
 
     def test_alternative_store(self):
-        cache = Parameter("test", store=AlternateStore)
+        cache = SSMParameter("test", store=AlternateStore)
         self.assertEqual(cache.value, "alternative")
 
     def test_env_store(self):
         os.environ["PREFIX___TEST"] = "my_value"
-        cache = Parameter("test", store=EnvironmentParameterStore("PREFIX___"))
+        cache = SSMParameter("test", store=EnvironmentParameterStore("PREFIX___"))
         self.assertEqual(cache.value, "my_value")
