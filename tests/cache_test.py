@@ -75,6 +75,26 @@ class TestSSMCache(TestBase):
         my_value = cache.value
         self.assertEqual(my_value, self.PARAM_VALUE)
 
+    def test_main_with_expiration_group(self):
+        group = SSMParameterGroup(max_age=300)
+        param_1 = group.parameter("my_param_1")
+        param_2 = group.parameter("my_param_2")
+        param_3 = group.parameter("my_param_3")
+
+        # individual params don't share max_age internally (for now)
+        for param in (param_1, param_2, param_3):
+            self.assertEqual(param._max_age, None)
+
+        # force fetch
+        group.refresh()
+
+        # pretend time has passed (for the group)
+        group._last_refresh_time = datetime.utcnow() - timedelta(seconds=301)
+        self.assertTrue(group._should_refresh())
+        self.assertTrue(param_1._should_refresh())
+        self.assertTrue(param_2._should_refresh())
+        self.assertTrue(param_3._should_refresh())
+
     def test_main_without_encryption(self):
         cache = SSMParameter("my_param", with_decryption=False)
         my_value = cache.value

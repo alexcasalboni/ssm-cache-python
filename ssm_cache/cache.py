@@ -124,6 +124,11 @@ class SSMParameter(Refreshable):
         self._with_decryption = with_decryption
         self._group = None
 
+    def _should_refresh(self):
+        if self._group:
+            return self._group._should_refresh()
+        return super(SSMParameter, self)._should_refresh()
+
     def _refresh(self):
         """ Force refresh of the configured param names """
         if self._group:

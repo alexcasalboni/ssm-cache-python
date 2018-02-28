@@ -49,7 +49,7 @@ You can configure more than one parameter to be fetched/cached (and decrypted or
 
 ```python
 from ssm_cache import SSMParameterGroup
-group = SSMParameterGroup()
+group = SSMParameterGroup(max_age=300)
 param_1 = group.parameter('param_1')
 param_2 = group.parameter('param_2')
 
