@@ -81,8 +81,9 @@ class TestSSMCache(TestBase):
         param_2 = group.parameter("my_param_2")
         param_3 = group.parameter("my_param_3")
 
+        # individual params don't share max_age internally (for now)
         for param in (param_1, param_2, param_3):
-            self.assertEqual(param._max_age, 300)
+            self.assertEqual(param._max_age, None)
 
         # force fetch
         group.refresh()
