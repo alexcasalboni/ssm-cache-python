@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
+env3/
 build/
 develop-eggs/
 dist/
@@ -104,3 +105,5 @@ cover/
 
 # eclipse
 .*project
+
+setup.cfg
