@@ -90,7 +90,7 @@ new_new_value_2 = param_2.value # one parameter refreshes the whole group
 
 ### Without decryption
 
-Decryption is enabled by default, but you can explicitly disable it on either an SSMParameter or SSMGroup.
+Decryption is enabled by default, but you can explicitly disable it on either an `SSMParameter` or `SSMGroup`.
 
 ```python
 from ssm_cache import SSMParameter
@@ -100,7 +100,7 @@ value = param.value
 
 ## Usage with AWS Lambda
 
-Your AWS Lambda code will look similar to the following snippet.
+Your [AWS Lambda](https://aws.amazon.com/lambda/) code will look similar to the following snippet.
 
 ```python
 from ssm_cache import SSMParameter
@@ -142,9 +142,9 @@ def lambda_handler(event, context):
 
 ## Decorator utility
 
-The retry logic shown above can be simplified with the decorator method provided by each `SSMParameter` object.
+The retry logic shown above can be simplified with the decorator method provided by each `SSMParameter` and `SSMParameterGroup` object.
 
-The `@param.refresh_on_error` decorator will intercept errors (or a specific `error_class`, if given), refresh the parameters values, and attempt to re-call the decorated function. Optionally, you can provide a `callback` argument to implement your own logic (in the example below, to create a new db client with the new password).
+The `@refresh_on_error` decorator will intercept errors (or a specific `error_class`, if given), refresh the parameters values, and attempt to re-call the decorated function. Optionally, you can provide a `callback` argument to implement your own logic (in the example below, to create a new db client with the new password).
 
 ```python
 from ssm_cache import SSMParameter
@@ -165,6 +165,12 @@ def lambda_handler(event, context):
         'record': read_record(),
     }
 ```
+
+Optionally, you can also customize the `is_retry` argument name. `refresh_on_error` supports the following arguments:
+
+* **error_class** (default: `Exception`)
+* **error_callback** (default: `None`)
+* **retry_argument** (default: `"is_retry"`)
 
 ## How to contribute
 
@@ -197,9 +203,11 @@ Run pylint:
 pylint ssm_cache
 ```
 
+Note: when you open a new PR, GitHub will run tests on multiple Python environments and verify the new coverage for you, but we highly recommend you run these tasks locally as well before submitting new code.
 
 ## What's new?
 
+* **version 2.1**: group refresh bugfix
 * **version 2.0**: new interface, `SSMParameterGroup` support
 * **version 1.3**: Python3 support
 * **version 1.0**: initial release
