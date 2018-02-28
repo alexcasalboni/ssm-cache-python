@@ -93,7 +93,7 @@ class SSMParameterGroup(Refreshable):
         """ Create a new SSMParameter by name (or retrieve an existing one) """
         if name in self._parameters:
             return self._parameters[name]
-        parameter = SSMParameter(name, max_age=self._max_age)
+        parameter = SSMParameter(name)
         parameter._group = self  # pylint: disable=protected-access
         self._parameters[name] = parameter
         return parameter
