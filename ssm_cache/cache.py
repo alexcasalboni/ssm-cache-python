@@ -132,7 +132,7 @@ class SSMParameter(Refreshable):
     def _refresh(self):
         """ Force refresh of the configured param names """
         if self._group:
-            return self._group.refresh()
+            self._group.refresh()
 
         values, invalid_parameters = self._get_parameters([self._name], self._with_decryption)
         if invalid_parameters:
