@@ -179,6 +179,10 @@ Optionally, you can also customize the `is_retry` argument name. `refresh_on_err
 * **error_callback** (default: `None`)
 * **retry_argument** (default: `"is_retry"`)
 
+## Replacing the SSM client
+
+If you want to replace the default `boto3` SSM client, `SSMParameter` and `SSMParameterGroup` both support calling `set_ssm_client` with an object that implements the SSM `get_parameters` method. There is an example of doing this for testing in `tests/override_test.py`.
+
 ## How to contribute
 
 Clone this repository, create a virtualenv and install all the dev dependencies:
