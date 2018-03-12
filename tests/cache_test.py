@@ -21,6 +21,8 @@ class TestSSMCache(TestBase):
     def setUp(self):
         names = ["my_param", "my_param_1", "my_param_2", "my_param_3"]
         self._create_params(names)
+        list_names = ["my_params_list"]
+        self._create_params(names=list_names, parameter_type="StringList")
 
     def test_creation(self):
         """ Test regular creation """
@@ -81,6 +83,14 @@ class TestSSMCache(TestBase):
         with self.assertRaises(InvalidParameterError):
             group.refresh()
 
+    def test_string_list(self):
+        """ Test StringList expiration """
+        cache = SSMParameter("my_params_list")
+        my_values = cache.value
+        self.assertTrue(isinstance(my_values, list))
+        self.assertEqual(len(my_values), self.PARAM_LIST_COUNT)
+        for value in my_values:
+            self.assertEqual(value, self.PARAM_VALUE)
 
     def test_with_expiration(self):
         """ Test simple case with expiration """
