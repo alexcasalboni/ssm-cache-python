@@ -18,5 +18,5 @@ setup(
     url='https://github.com/alexcasalboni/ssm-cache-python',
     download_url='https://github.com/alexcasalboni/ssm-cache-python/archive/2.1.tar.gz',
     packages=find_packages(),
-    install_requires=['boto3==1.5.33', 'future==0.16.0']
+    install_requires=['boto3', 'future']
 )
