@@ -5,15 +5,27 @@ from datetime import datetime, timedelta
 from functools import wraps
 import six
 
-import boto3
-
 class InvalidParameterError(Exception):
     """ Raised when something's wrong with the provided param name """
 
 class Refreshable(object):
     """ Abstract class for refreshable objects (with max-age) """
 
-    ssm_client = boto3.client('ssm')
+    _ssm_client = None
+
+    @classmethod
+    def set_ssm_client(cls, client):
+        """Override the default boto3 SSM client with your own."""
+        if not 'get_parameters' in dir(client):
+            raise TypeError('client must have a get_parameters method')
+        cls._ssm_client = client
+
+    @classmethod
+    def _get_ssm_client(cls):
+        if cls._ssm_client is None:
+            import boto3
+            cls._ssm_client = boto3.client('ssm')
+        return cls._ssm_client
 
     def __init__(self, max_age):
         self._last_refresh_time = None
@@ -44,7 +56,7 @@ class Refreshable(object):
         values = {}
         invalid_names = []
         for name_batch in _batch(names, 10): # can only get 10 parameters at a time
-            response = cls.ssm_client.get_parameters(
+            response = cls._get_ssm_client().get_parameters(
                 Names=list(name_batch),
                 WithDecryption=with_decryption,
             )
@@ -132,7 +144,7 @@ class SSMParameter(Refreshable):
     def _refresh(self):
         """ Force refresh of the configured param names """
         if self._group:
-            return self._group.refresh()
+            self._group.refresh()
 
         values, invalid_parameters = self._get_parameters([self._name], self._with_decryption)
         if invalid_parameters:

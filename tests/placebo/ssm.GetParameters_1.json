@@ -1,0 +1,14 @@
+{
+    "status_code": 200,
+    "data": {
+        "InvalidParameters": [],
+        "Parameters": [
+            {
+                "Version": 1,
+                "Type": "String",
+                "Name": "my_param",
+                "Value": "expected value"
+            }
+        ]
+    }
+}
