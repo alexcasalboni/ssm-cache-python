@@ -16,7 +16,7 @@ class Refreshable(object):
     @classmethod
     def set_ssm_client(cls, client):
         """Override the default boto3 SSM client with your own."""
-        if not 'get_parameters' in dir(client):
+        if not hasattr(client, 'get_parameters'):
             raise TypeError('client must have a get_parameters method')
         cls._ssm_client = client
 
