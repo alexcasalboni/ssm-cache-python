@@ -63,6 +63,8 @@ class Refreshable(object):
             invalid_names.extend(response['InvalidParameters'])
             for item in response['Parameters']:
                 values[item['Name']] = item['Value']
+                if item['Type'] == 'StringList':
+                    values[item['Name']] = values[item['Name']].split(',')
 
         return values, invalid_names
 
