@@ -245,6 +245,7 @@ Note: when you open a new PR, GitHub will run tests on multiple Python environme
 
 ## What's new?
 
+* **version 2.3**: StringList parameters support (auto-conversion)
 * **version 2.2**: client replacement and boto3/botocore minimum requirements
 * **version 2.1**: group refresh bugfix
 * **version 2.0**: new interface, `SSMParameterGroup` support
