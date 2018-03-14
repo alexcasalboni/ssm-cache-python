@@ -14,7 +14,7 @@ AWS System Manager Parameter Store Caching Client (Python)
 
 
 
-This module wraps the AWS Parameter Store and adds a caching layer with max-age invalidation.
+This module wraps the AWS Parameter Store and adds a caching and grouping layer with max-age invalidation.
 
 You can use this module with AWS Lambda to read and refresh sensitive parameters. Your IAM role will require `ssm:GetParameters` permissions (optionally, also `kms:Decrypt` if you use `SecureString` params).
 
@@ -181,7 +181,24 @@ Optionally, you can also customize the `is_retry` argument name. `refresh_on_err
 
 ## Replacing the SSM client
 
-If you want to replace the default `boto3` SSM client, `SSMParameter` and `SSMParameterGroup` both support calling `set_ssm_client` with an object that implements the SSM `get_parameters` method. There is an example of doing this for testing in `tests/override_test.py`.
+If you want to replace the default `boto3` SSM client, `SSMParameter` and `SSMParameterGroup` both support calling `set_ssm_client` with an object that implements the SSM `get_parameters` method.
+
+For example, here's how you could inject a Placebo client for local tests:
+
+```python
+import placebo, boto3
+from ssm_cache import SSMParameter
+
+# create regular boto3 session
+session = boto3.Session()
+# attach placebo to the session
+pill = placebo.attach(session, data_path=PLACEBO_PATH)
+pill.playback()
+# create special boto3 client
+client = session.client('ssm')
+# inject special client into SSMParameter or SSMParameterGroup
+SSMParameter.set_ssm_client(client)
+```
 
 ## How to contribute
 
