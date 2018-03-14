@@ -64,6 +64,16 @@ value_1 = param_1.value
 value_2 = param_2.value
 ```
 
+### With StringList parameters
+
+`StringList` parameters ([documentation here](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ssm-parameter.html#cfn-ssm-parameter-type)) are automatically converted to Python lists with no additional configuration.
+
+```python
+from ssm_cache import SSMParameter
+# "my_twitter_api_keys" is a StringList parameter (four comma-separated values)
+twitter_params = SSMParameter('my_twitter_api_keys')
+key, secret, access_token, access_token_secret = twitter_params.value
+```
 ### Explicit refresh
 
 You can manually force a refresh on a parameter or parameter group.
