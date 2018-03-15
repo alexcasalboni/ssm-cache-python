@@ -19,17 +19,17 @@ class TestSSMHierarchy(TestBase):
     HIERARCHY_ROOT = "/Root"
     HIERARCHY_PREPATH = "%s/Level1/Level2" % HIERARCHY_ROOT
     HIERARCHY_PREPATH_LIST = "%s/LevelA/LevelB" % HIERARCHY_ROOT
-    GROUP_SIZE = 10
+    GROUP_SIZE = 20
 
     def setUp(self):
         names = [
             "%s/my_param_%d" % (self.HIERARCHY_PREPATH, i)
-            for i in xrange(self.GROUP_SIZE)
+            for i in range(self.GROUP_SIZE)
         ]
         self._create_params(names)
         list_names = [
             "%s/my_param_list_%d" % (self.HIERARCHY_PREPATH_LIST, i)
-            for i in xrange(self.GROUP_SIZE)
+            for i in range(self.GROUP_SIZE)
         ]
         self._create_params(names=list_names, parameter_type="StringList")
 
