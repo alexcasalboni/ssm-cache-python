@@ -16,26 +16,27 @@ from ssm_cache import SSMParameterGroup
 class TestSSMHierarchy(TestBase):
     """ Hierarchical parameters tests """
 
-    HIERARCHY_ROOT = "Root"
-    HIERARCHY_PREPATH = "%s/Level1/Level2/" % HIERARCHY_ROOT
-    HIERARCHY_PREPATH_LIST = "%s/LevelA/LevelB/" % HIERARCHY_ROOT
+    HIERARCHY_ROOT = "/Root"
+    HIERARCHY_PREPATH = "%s/Level1/Level2" % HIERARCHY_ROOT
+    HIERARCHY_PREPATH_LIST = "%s/LevelA/LevelB" % HIERARCHY_ROOT
+    GROUP_SIZE = 10
 
     def setUp(self):
         names = [
-            "%s/my_param_1" % self.HIERARCHY_PREPATH,
-            "%s/my_param_2" % self.HIERARCHY_PREPATH,
+            "%s/my_param_%d" % (self.HIERARCHY_PREPATH, i)
+            for i in xrange(self.GROUP_SIZE)
         ]
         self._create_params(names)
         list_names = [
-            "%s/my_param_list_1" % self.HIERARCHY_PREPATH_LIST,
-            "%s/my_param_list_2" % self.HIERARCHY_PREPATH_LIST,
+            "%s/my_param_list_%d" % (self.HIERARCHY_PREPATH_LIST, i)
+            for i in xrange(self.GROUP_SIZE)
         ]
         self._create_params(names=list_names, parameter_type="StringList")
 
     def test_hierarchy(self):
         """ Test group hierarchy """
         group = SSMParameterGroup(hierarchy_path=self.HIERARCHY_PREPATH)
-        self.assertEqual(len(group), 2)
+        self.assertEqual(len(group), self.GROUP_SIZE)
         for parameter in group.parameters:
             self.assertEqual(parameter.value, self.PARAM_VALUE)
             self.assertTrue(self.HIERARCHY_PREPATH in parameter.name)
@@ -43,7 +44,7 @@ class TestSSMHierarchy(TestBase):
     def test_hierarchy_with_lists(self):
         """ Test group hierarchy with lists """
         group = SSMParameterGroup(hierarchy_path=self.HIERARCHY_PREPATH_LIST)
-        self.assertEqual(len(group), 2)
+        self.assertEqual(len(group), self.GROUP_SIZE)
         for parameter in group.parameters:
             self.assertIsInstance(parameter.value, list)
             for value in parameter.value:
@@ -53,6 +54,6 @@ class TestSSMHierarchy(TestBase):
     def test_hierarchy_root(self):
         """ Test group hierarchy root """
         group = SSMParameterGroup(hierarchy_path=self.HIERARCHY_ROOT)
-        self.assertEqual(len(group), 4)
+        self.assertEqual(len(group), self.GROUP_SIZE * 2)
         for parameter in group.parameters:
             self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
