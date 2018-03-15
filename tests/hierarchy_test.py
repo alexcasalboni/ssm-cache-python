@@ -16,8 +16,9 @@ from ssm_cache import SSMParameterGroup
 class TestSSMHierarchy(TestBase):
     """ Hierarchical parameters tests """
 
-    HIERARCHY_PREPATH = "Level1/Level2/"
-    HIERARCHY_PREPATH_LIST = "Level1.2/Level2.2/"
+    HIERARCHY_ROOT = "Root"
+    HIERARCHY_PREPATH = "%s/Level1/Level2/" % HIERARCHY_ROOT
+    HIERARCHY_PREPATH_LIST = "%s/LevelA/LevelB/" % HIERARCHY_ROOT
 
     def setUp(self):
         names = [
@@ -48,3 +49,10 @@ class TestSSMHierarchy(TestBase):
             for value in parameter.value:
                 self.assertEqual(value, self.PARAM_VALUE)
             self.assertTrue(self.HIERARCHY_PREPATH_LIST in parameter.name)
+
+    def test_hierarchy_root(self):
+        """ Test group hierarchy root """
+        group = SSMParameterGroup(hierarchy_path=self.HIERARCHY_ROOT)
+        self.assertEqual(len(group), 4)
+        for parameter in group.parameters:
+            self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
