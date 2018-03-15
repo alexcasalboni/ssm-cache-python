@@ -51,6 +51,12 @@ class Refreshable(object):
         # keep track of update date for max_age checks
         self._last_refresh_time = datetime.utcnow()
 
+    @staticmethod
+    def _parse_value(param_value, param_type):
+        if param_type == 'StringList':
+            return param_value.split(',')
+        return param_value
+
     @classmethod
     def _get_parameters(cls, names, with_decryption):
         values = {}
@@ -62,11 +68,27 @@ class Refreshable(object):
             )
             invalid_names.extend(response['InvalidParameters'])
             for item in response['Parameters']:
-                values[item['Name']] = item['Value']
-                if item['Type'] == 'StringList':
-                    values[item['Name']] = values[item['Name']].split(',')
+                values[item['Name']] = cls._parse_value(item['Value'], item['Type'])
 
         return values, invalid_names
+
+    @classmethod
+    def _get_parameters_by_path(cls, with_decryption, hierarchy_path):
+        """ Return all the parameters under the given path """
+        values = {}
+        # paginators doc: http://boto3.readthedocs.io/en/latest/guide/paginators.html
+        pages = cls._get_ssm_client().get_paginator('get_parameters_by_path').paginate(
+            Path=hierarchy_path,
+            Recursive=True,
+            WithDecryption=with_decryption,
+            # TODO also support ParameterFilters?
+        )
+        for page in pages:
+            for item in page['Parameters']:
+                values[item['Name']] = cls._parse_value(item['Value'], item['Type'])
+
+        return values
+
 
     def refresh_on_error(
             self,
@@ -84,7 +106,7 @@ class Refreshable(object):
                 """ Actual error/retry handling """
                 try:
                     return func(*args, **kwargs)
-                except error_class:
+                except error_class:  # pylint: disable=broad-except
                     self.refresh()
                     if error_callback:
                         error_callback()
@@ -97,11 +119,23 @@ class Refreshable(object):
 class SSMParameterGroup(Refreshable):
     """ Concrete class that wraps multiple SSM Parameters """
 
-    def __init__(self, max_age=None, with_decryption=True):
+    def __init__(self, max_age=None, with_decryption=True, hierarchy_path=None):
         super(SSMParameterGroup, self).__init__(max_age)
 
         self._with_decryption = with_decryption
         self._parameters = {}
+
+        # fetch parameters asap
+        if hierarchy_path:
+            items = self._get_parameters_by_path(
+                with_decryption=with_decryption,
+                hierarchy_path=hierarchy_path,
+            )
+            # create new parameters and set values
+            for name, value in items.iteritems():
+                parameter = self.parameter(name)
+                parameter._value = value  # pylint: disable=protected-access
+
 
     def parameter(self, name):
         """ Create a new SSMParameter by name (or retrieve an existing one) """
@@ -115,13 +149,18 @@ class SSMParameterGroup(Refreshable):
     def _refresh(self):
         names = [
             p._name  # pylint: disable=protected-access
-            for p in six.itervalues(self._parameters)
+            for p in self.parameters
         ]
         values, invalid_names = self._get_parameters(names, self._with_decryption)
         if invalid_names:
             raise InvalidParameterError(",".join(invalid_names))
-        for parameter in six.itervalues(self._parameters):
+        for parameter in self.parameters:
             parameter._value = values[parameter._name]  # pylint: disable=protected-access
+
+    @property
+    def parameters(self):
+        """ Return a list of SSMParameter objects """
+        return six.itervalues(self._parameters)
 
     def __len__(self):
         return len(self._parameters)
@@ -140,7 +179,7 @@ class SSMParameter(Refreshable):
 
     def _should_refresh(self):
         if self._group:
-            return self._group._should_refresh()
+            return self._group._should_refresh()  # pylint: disable=protected-access
         return super(SSMParameter, self)._should_refresh()
 
     def _refresh(self):
