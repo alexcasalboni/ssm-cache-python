@@ -132,7 +132,7 @@ class SSMParameterGroup(Refreshable):
                 hierarchy_path=hierarchy_path,
             )
             # create new parameters and set values
-            for name, value in items.iteritems():
+            for name, value in six.iteritems(items):
                 parameter = self.parameter(name)
                 parameter._value = value  # pylint: disable=protected-access
 
