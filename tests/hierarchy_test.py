@@ -17,8 +17,10 @@ class TestSSMHierarchy(TestBase):
     """ Hierarchical parameters tests """
 
     HIERARCHY_ROOT = "/Root"
-    HIERARCHY_PREPATH = "%s/Level1/Level2" % HIERARCHY_ROOT
-    HIERARCHY_PREPATH_LIST = "%s/LevelA/LevelB" % HIERARCHY_ROOT
+    HIERARCHY_PREPATH_SIMPLE = "/Level1/Level2"
+    HIERARCHY_PREPATH = "%s%s" % (HIERARCHY_ROOT, HIERARCHY_PREPATH_SIMPLE)
+    HIERARCHY_PREPATH_LIST_SIMPLE = "/LevelA/LevelB"
+    HIERARCHY_PREPATH_LIST = "%s%s" % (HIERARCHY_ROOT, HIERARCHY_PREPATH_LIST_SIMPLE)
     GROUP_SIZE = 20
 
     def setUp(self):
@@ -57,6 +59,7 @@ class TestSSMHierarchy(TestBase):
         """ Test group hierarchy root """
         group = SSMParameterGroup()
         params = group.parameters(self.HIERARCHY_ROOT)
+        self.assertEqual(len(params), self.GROUP_SIZE * 2)
         self.assertEqual(len(group), self.GROUP_SIZE * 2)
         for parameter in params:
             self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
@@ -66,6 +69,8 @@ class TestSSMHierarchy(TestBase):
         group = SSMParameterGroup()
         params_1 = group.parameters(self.HIERARCHY_PREPATH)
         params_2 = group.parameters(self.HIERARCHY_PREPATH_LIST)
+        self.assertEqual(len(params_1), self.GROUP_SIZE)
+        self.assertEqual(len(params_2), self.GROUP_SIZE)
         self.assertEqual(len(group), self.GROUP_SIZE * 2)
         for parameter in params_1:
             self.assertTrue(self.HIERARCHY_PREPATH in parameter.name)
@@ -75,14 +80,30 @@ class TestSSMHierarchy(TestBase):
             self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
 
     def test_hierarchy_multiple_overlap(self):
-        """ Test group hierarchy multiple calls """
+        """ Test group hierarchy multiple overlapping calls """
         group = SSMParameterGroup()
         params_1 = group.parameters(self.HIERARCHY_PREPATH)
         params_all = group.parameters(self.HIERARCHY_ROOT)
-        self.assertEqual(len(group), self.GROUP_SIZE * 2)
+        self.assertEqual(len(params_1), self.GROUP_SIZE)
         self.assertEqual(len(params_all), self.GROUP_SIZE * 2)
+        self.assertEqual(len(group), self.GROUP_SIZE * 2)
         for parameter in params_1:
             self.assertTrue(self.HIERARCHY_PREPATH in parameter.name)
             self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
         for parameter in params_all:
+            self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
+
+    def test_hierarchy_group_prefix(self):
+        """ Test group hierarchy multiple calls """
+        group = SSMParameterGroup(path_prefix=self.HIERARCHY_ROOT)
+        params_1 = group.parameters(self.HIERARCHY_PREPATH_SIMPLE)
+        params_2 = group.parameters(self.HIERARCHY_PREPATH_LIST_SIMPLE)
+        self.assertEqual(len(params_1), self.GROUP_SIZE)
+        self.assertEqual(len(params_2), self.GROUP_SIZE)
+        self.assertEqual(len(group), self.GROUP_SIZE * 2)
+        for parameter in params_1:
+            self.assertTrue(self.HIERARCHY_PREPATH in parameter.name)
+            self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
+        for parameter in params_2:
+            self.assertTrue(self.HIERARCHY_PREPATH_LIST in parameter.name)
             self.assertTrue(self.HIERARCHY_ROOT in parameter.name)

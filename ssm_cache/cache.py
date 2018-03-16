@@ -119,11 +119,12 @@ class Refreshable(object):
 class SSMParameterGroup(Refreshable):
     """ Concrete class that wraps multiple SSM Parameters """
 
-    def __init__(self, max_age=None, with_decryption=True):
+    def __init__(self, max_age=None, with_decryption=True, path_prefix=""):
         super(SSMParameterGroup, self).__init__(max_age)
 
         self._with_decryption = with_decryption
         self._parameters = {}
+        self._path_prefix = path_prefix or ""
 
     def parameter(self, name):
         """ Create a new SSMParameter by name (or retrieve an existing one) """
@@ -136,6 +137,8 @@ class SSMParameterGroup(Refreshable):
 
     def parameters(self, path_prefix):
         """ Create new SSMParameter objects by path prefix """
+        if self._path_prefix:
+            path_prefix = "%s%s" % (self._path_prefix, path_prefix)
         items = self._get_parameters_by_path(
             with_decryption=self._with_decryption,
             path_prefix=path_prefix,
