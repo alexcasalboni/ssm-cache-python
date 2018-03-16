@@ -73,12 +73,12 @@ class Refreshable(object):
         return values, invalid_names
 
     @classmethod
-    def _get_parameters_by_path(cls, with_decryption, hierarchy_path):
+    def _get_parameters_by_path(cls, with_decryption, path_prefix):
         """ Return all the parameters under the given path """
         values = {}
         # paginators doc: http://boto3.readthedocs.io/en/latest/guide/paginators.html
         pages = cls._get_ssm_client().get_paginator('get_parameters_by_path').paginate(
-            Path=hierarchy_path,
+            Path=path_prefix,
             Recursive=True,
             WithDecryption=with_decryption,
             # TODO also support ParameterFilters?
@@ -119,23 +119,11 @@ class Refreshable(object):
 class SSMParameterGroup(Refreshable):
     """ Concrete class that wraps multiple SSM Parameters """
 
-    def __init__(self, max_age=None, with_decryption=True, hierarchy_path=None):
+    def __init__(self, max_age=None, with_decryption=True):
         super(SSMParameterGroup, self).__init__(max_age)
 
         self._with_decryption = with_decryption
         self._parameters = {}
-
-        # fetch parameters asap
-        if hierarchy_path:
-            items = self._get_parameters_by_path(
-                with_decryption=with_decryption,
-                hierarchy_path=hierarchy_path,
-            )
-            # create new parameters and set values
-            for name, value in six.iteritems(items):
-                parameter = self.parameter(name)
-                parameter._value = value  # pylint: disable=protected-access
-
 
     def parameter(self, name):
         """ Create a new SSMParameter by name (or retrieve an existing one) """
@@ -146,19 +134,32 @@ class SSMParameterGroup(Refreshable):
         self._parameters[name] = parameter
         return parameter
 
+    def parameters(self, path_prefix):
+        """ Create new SSMParameter objects by path prefix """
+        items = self._get_parameters_by_path(
+            with_decryption=self._with_decryption,
+            path_prefix=path_prefix,
+        )
+        parameters = []
+        # create new parameters and set values
+        for name, value in six.iteritems(items):
+            parameter = self.parameter(name)
+            parameter._value = value  # pylint: disable=protected-access
+            parameters.append(parameter)
+        return parameters
+
     def _refresh(self):
         names = [
             p._name  # pylint: disable=protected-access
-            for p in self.parameters
+            for p in self.get_all_parameters()
         ]
         values, invalid_names = self._get_parameters(names, self._with_decryption)
         if invalid_names:
             raise InvalidParameterError(",".join(invalid_names))
-        for parameter in self.parameters:
+        for parameter in self.get_all_parameters():
             parameter._value = values[parameter._name]  # pylint: disable=protected-access
 
-    @property
-    def parameters(self):
+    def get_all_parameters(self):
         """ Return a list of SSMParameter objects """
         return six.itervalues(self._parameters)
 
