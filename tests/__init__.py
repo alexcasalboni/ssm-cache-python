@@ -18,9 +18,12 @@ class TestBase(unittest.TestCase):
         if parameter_type == 'StringList' and not isinstance(value, list):
             value = ",".join([value] * self.PARAM_LIST_COUNT)
         for name in names:
-            self.ssm_client.put_parameter(
+            arguments = dict(
                 Name=name,
                 Value=value,
                 Type=parameter_type,
                 Overwrite=True,
             )
+            if parameter_type == 'SecureString':
+                arguments['KeyId'] = 'alias/aws/ssm'
+            self.ssm_client.put_parameter(**arguments)
