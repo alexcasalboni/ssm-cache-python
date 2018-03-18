@@ -73,12 +73,12 @@ class Refreshable(object):
         return values, invalid_names
 
     @classmethod
-    def _get_parameters_by_path(cls, with_decryption, path_prefix):
+    def _get_parameters_by_path(cls, with_decryption, path):
         """ Return all the parameters under the given path """
         values = {}
         # paginators doc: http://boto3.readthedocs.io/en/latest/guide/paginators.html
         pages = cls._get_ssm_client().get_paginator('get_parameters_by_path').paginate(
-            Path=path_prefix,
+            Path=path,
             Recursive=True,
             WithDecryption=with_decryption,
             # TODO also support ParameterFilters?
@@ -119,12 +119,12 @@ class Refreshable(object):
 class SSMParameterGroup(Refreshable):
     """ Concrete class that wraps multiple SSM Parameters """
 
-    def __init__(self, max_age=None, with_decryption=True, path_prefix=""):
+    def __init__(self, max_age=None, with_decryption=True, base_path=""):
         super(SSMParameterGroup, self).__init__(max_age)
 
         self._with_decryption = with_decryption
         self._parameters = {}
-        self._path_prefix = path_prefix or ""
+        self._base_path = base_path or ""
 
     def parameter(self, name):
         """ Create a new SSMParameter by name (or retrieve an existing one) """
@@ -135,13 +135,13 @@ class SSMParameterGroup(Refreshable):
         self._parameters[name] = parameter
         return parameter
 
-    def parameters(self, path_prefix):
+    def parameters(self, path):
         """ Create new SSMParameter objects by path prefix """
-        if self._path_prefix:
-            path_prefix = "%s%s" % (self._path_prefix, path_prefix)
+        if self._base_path:
+            path = "%s%s" % (self._base_path, path)
         items = self._get_parameters_by_path(
             with_decryption=self._with_decryption,
-            path_prefix=path_prefix,
+            path=path,
         )
         parameters = []
         # create new parameters and set values

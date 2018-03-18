@@ -95,7 +95,7 @@ class TestSSMHierarchy(TestBase):
 
     def test_hierarchy_group_prefix(self):
         """ Test group hierarchy multiple calls """
-        group = SSMParameterGroup(path_prefix=self.HIERARCHY_ROOT)
+        group = SSMParameterGroup(base_path=self.HIERARCHY_ROOT)
         params_1 = group.parameters(self.HIERARCHY_PREPATH_SIMPLE)
         params_2 = group.parameters(self.HIERARCHY_PREPATH_LIST_SIMPLE)
         self.assertEqual(len(params_1), self.GROUP_SIZE)
