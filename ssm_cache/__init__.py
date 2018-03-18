@@ -3,4 +3,5 @@ from ssm_cache.cache import (
     SSMParameter,
     SSMParameterGroup,
     InvalidParameterError,
+    InvalidPathError,
 )

@@ -8,7 +8,7 @@ from . import TestBase
 # pylint: disable=wrong-import-order,wrong-import-position
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from ssm_cache import SSMParameterGroup
+from ssm_cache import SSMParameterGroup, SSMParameter, InvalidPathError
 
 
 # pylint: disable=protected-access
@@ -93,8 +93,8 @@ class TestSSMHierarchy(TestBase):
         for parameter in params_all:
             self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
 
-    def test_hierarchy_group_prefix(self):
-        """ Test group hierarchy multiple calls """
+    def test_hierarchy_prefix(self):
+        """ Test group hierarchy prefix with multiple parameters """
         group = SSMParameterGroup(base_path=self.HIERARCHY_ROOT)
         params_1 = group.parameters(self.HIERARCHY_PREPATH_SIMPLE)
         params_2 = group.parameters(self.HIERARCHY_PREPATH_LIST_SIMPLE)
@@ -107,3 +107,56 @@ class TestSSMHierarchy(TestBase):
         for parameter in params_2:
             self.assertTrue(self.HIERARCHY_PREPATH_LIST in parameter.name)
             self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
+
+    def test_hierarchy_prefix_single(self):
+        """ Test group hierarchy prefix with single parameter """
+        group = SSMParameterGroup(base_path=self.HIERARCHY_ROOT)
+        param = group.parameter("%s/my_param_1" % self.HIERARCHY_PREPATH_SIMPLE)
+        self.assertEqual(len(group), 1)
+        self.assertTrue(self.HIERARCHY_PREPATH in param.name)
+        self.assertTrue(self.HIERARCHY_ROOT in param.name)
+        self.assertEqual(param.value, self.PARAM_VALUE)
+
+    def test_hierarchy_prefix_mixed(self):
+        """ Test group hierarchy prefix with mixed parameters """
+        group = SSMParameterGroup(base_path=self.HIERARCHY_ROOT)
+        param = group.parameter("%s/my_param_1" % self.HIERARCHY_PREPATH_SIMPLE)
+        params_1 = group.parameters(self.HIERARCHY_PREPATH_SIMPLE)
+        params_2 = group.parameters(self.HIERARCHY_PREPATH_LIST_SIMPLE)
+        self.assertIsInstance(param, SSMParameter)
+        self.assertEqual(len(params_1), self.GROUP_SIZE)
+        self.assertEqual(len(params_2), self.GROUP_SIZE)
+        self.assertEqual(len(group), self.GROUP_SIZE * 2)
+
+    def test_hierarchy_prefix_complex(self):
+        """ Test group hierarchy prefix (complex) """
+        names = [
+            "/Foo/Bar",
+            "/Foo/Baz/1",
+            "/Foo/Baz/2",
+            "/Foo/Taz/1",
+            "/Foo/Taz/2",
+        ]
+        self._create_params(names)
+        group = SSMParameterGroup(base_path="/Foo")
+        bar_param = group.parameter("/Bar")
+        baz_params = group.parameters("/Baz")
+        taz_params = group.parameters("/Taz")
+        self.assertIsInstance(bar_param, SSMParameter)
+        self.assertEqual(len(baz_params), 2)
+        self.assertEqual(len(taz_params), 2)
+        self.assertEqual(len(group), 5)
+
+    def test_hierarchy_prefix_errors(self):
+        """ Test group hierarchy prefix errors """
+        with self.assertRaises(InvalidPathError):
+            _ = SSMParameterGroup(base_path="InvalidPrefix")
+
+        group = SSMParameterGroup(base_path=self.HIERARCHY_ROOT)
+
+        # note: this raises only because the group has a base path
+        with self.assertRaises(InvalidPathError):
+            _ = group.parameter("InvalidPath")
+
+        with self.assertRaises(InvalidPathError):
+            _ = group.parameters("InvalidPath")

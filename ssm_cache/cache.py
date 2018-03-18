@@ -8,6 +8,10 @@ import six
 class InvalidParameterError(Exception):
     """ Raised when something's wrong with the provided param name """
 
+class InvalidPathError(Exception):
+    """ Raised when a given path is not properly structured """
+
+
 class Refreshable(object):
     """ Abstract class for refreshable objects (with max-age) """
 
@@ -125,18 +129,29 @@ class SSMParameterGroup(Refreshable):
         self._with_decryption = with_decryption
         self._parameters = {}
         self._base_path = base_path or ""
+        self._validate_path(base_path)  # may raise
 
-    def parameter(self, name):
-        """ Create a new SSMParameter by name (or retrieve an existing one) """
-        if name in self._parameters:
-            return self._parameters[name]
-        parameter = SSMParameter(name)
+    @staticmethod
+    def _validate_path(path):
+        if path and not path.startswith("/"):
+            raise InvalidPathError("Invalid path: %s (should start with a slash)" % path)
+
+    def parameter(self, path):
+        """ Create a new SSMParameter by name/path (or retrieve an existing one) """
+        if path in self._parameters:
+            return self._parameters[path]
+        if self._base_path:
+            # validate path only if base path is used (otherwise it's just a root name)
+            self._validate_path(path)  # may raise
+            path = "%s%s" % (self._base_path, path)
+        parameter = SSMParameter(path)
         parameter._group = self  # pylint: disable=protected-access
-        self._parameters[name] = parameter
+        self._parameters[path] = parameter
         return parameter
 
     def parameters(self, path):
         """ Create new SSMParameter objects by path prefix """
+        self._validate_path(path)  # may raise
         if self._base_path:
             path = "%s%s" % (self._base_path, path)
         items = self._get_parameters_by_path(
