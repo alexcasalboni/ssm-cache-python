@@ -131,14 +131,14 @@ class TestSSMHierarchy(TestBase):
     def test_hierarchy_prefix_complex(self):
         """ Test group hierarchy prefix (complex) """
         names = [
-            "/Foo/Bar",
-            "/Foo/Baz/1",
-            "/Foo/Baz/2",
-            "/Foo/Taz/1",
-            "/Foo/Taz/2",
+            "/PrefixComplex/Foo/Bar",
+            "/PrefixComplex/Foo/Baz/1",
+            "/PrefixComplex/Foo/Baz/2",
+            "/PrefixComplex/Foo/Taz/1",
+            "/PrefixComplex/Foo/Taz/2",
         ]
         self._create_params(names)
-        group = SSMParameterGroup(base_path="/Foo")
+        group = SSMParameterGroup(base_path="/PrefixComplex/Foo")
         bar_param = group.parameter("/Bar")
         baz_params = group.parameters("/Baz")
         taz_params = group.parameters("/Taz")
@@ -146,6 +146,36 @@ class TestSSMHierarchy(TestBase):
         self.assertEqual(len(baz_params), 2)
         self.assertEqual(len(taz_params), 2)
         self.assertEqual(len(group), 5)
+
+    def test_hierarchy_recursive(self):
+        """ Test group hierarchy prefix (recursive) """
+        names = [
+            "/PrefixRecursive/Foo/Baz/1",
+            "/PrefixRecursive/Foo/Baz/2",
+            "/PrefixRecursive/Foo/Baz/Taz/1",
+            "/PrefixRecursive/Foo/Baz/Taz/2",
+        ]
+        self._create_params(names)
+        group = SSMParameterGroup(base_path="/PrefixRecursive/Foo")
+        baz_params = group.parameters("/Baz")
+        self.assertEqual(len(baz_params), 4)
+        self.assertEqual(len(group), 4)
+
+    def test_hierarchy_not_recursive(self):
+        """ Test group hierarchy prefix (not recursive) """
+        names = [
+            "/PrefixNotRecursive/Foo/Baz/1",
+            "/PrefixNotRecursive/Foo/Baz/2",
+            "/PrefixNotRecursive/Foo/Baz/Taz/1",
+            "/PrefixNotRecursive/Foo/Baz/Taz/2",
+        ]
+        self._create_params(names)
+        group = SSMParameterGroup(base_path="/PrefixNotRecursive/Foo")
+        baz_params = group.parameters("/Baz", recursive=False)
+        taz_params = group.parameters("/Baz/Taz")
+        self.assertEqual(len(baz_params), 2)
+        self.assertEqual(len(taz_params), 2)
+        self.assertEqual(len(group), 4)
 
     def test_hierarchy_prefix_errors(self):
         """ Test group hierarchy prefix errors """
