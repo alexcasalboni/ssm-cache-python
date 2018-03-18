@@ -169,15 +169,15 @@ class SSMParameterGroup(Refreshable):
     def _refresh(self):
         names = [
             p._name  # pylint: disable=protected-access
-            for p in self.get_all_parameters()
+            for p in self.get_loaded_parameters()
         ]
         values, invalid_names = self._get_parameters(names, self._with_decryption)
         if invalid_names:
             raise InvalidParameterError(",".join(invalid_names))
-        for parameter in self.get_all_parameters():
+        for parameter in self.get_loaded_parameters():
             parameter._value = values[parameter._name]  # pylint: disable=protected-access
 
-    def get_all_parameters(self):
+    def get_loaded_parameters(self):
         """ Return a list of SSMParameter objects """
         return six.itervalues(self._parameters)
 
