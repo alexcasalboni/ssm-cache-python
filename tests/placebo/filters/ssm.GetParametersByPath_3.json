@@ -1,0 +1,36 @@
+{
+    "status_code": 200, 
+    "data": {
+        "ResponseMetadata": {
+            "RetryAttempts": 0, 
+            "HTTPStatusCode": 200, 
+            "RequestId": "02798217-2c55-11e8-9523-3bfa6e9c0a9e", 
+            "HTTPHeaders": {
+                "x-amzn-requestid": "02798217-2c55-11e8-9523-3bfa6e9c0a9e", 
+                "date": "Tue, 20 Mar 2018 15:40:25 GMT", 
+                "content-length": "262", 
+                "content-type": "application/x-amz-json-1.1"
+            }
+        }, 
+        "Parameters": [
+            {
+                "Version": 9, 
+                "Type": "String", 
+                "Name": "/filters-test/another_param", 
+                "Value": "abc123"
+            }, 
+            {
+                "Version": 9, 
+                "Type": "String", 
+                "Name": "/filters-test/my_param_1", 
+                "Value": "abc123"
+            }, 
+            {
+                "Version": 9, 
+                "Type": "String", 
+                "Name": "/filters-test/my_param_2", 
+                "Value": "abc123"
+            }
+        ]
+    }
+}

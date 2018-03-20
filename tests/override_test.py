@@ -13,7 +13,7 @@ from ssm_cache import SSMParameter
 class TestClientOverride(unittest.TestCase):
     """ Refreshable.set_ssm_client tests """
 
-    PLACEBO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 'placebo'))
+    PLACEBO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 'placebo/override'))
 
     def test_with_placebo(self):
         """ Test that set_ssm_client works fine with Placebo """

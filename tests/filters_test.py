@@ -1,7 +1,9 @@
 """ Test decorator utility """
 import os
 import sys
-from moto import mock_ssm
+# from moto import mock_ssm
+import boto3
+import placebo
 from . import TestBase
 
 # pylint: disable=wrong-import-order,wrong-import-position
@@ -18,9 +20,18 @@ from ssm_cache.filters import (
 )
 
 
-@mock_ssm
+# @mock_ssm
 class TestSSMFilters(TestBase):
     """ Test Filters """
+
+    PLACEBO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 'placebo/filters'))
+
+    def setUp(self):
+        session = boto3.Session()
+        pill = placebo.attach(session, data_path=self.PLACEBO_PATH)
+        pill.playback()
+        ssm_client = session.client('ssm')
+        SSMParameterGroup.set_ssm_client(ssm_client)
 
     def test_filter_interface(self):
         """ Test filter interface """
@@ -158,20 +169,21 @@ class TestSSMFilters(TestBase):
         # note: moto doesn't implement filters yet
         # GitHub issue here: https://github.com/spulec/moto/issues/1517
 
-        names = [
-            "/filters-test/my_param_1",
-            "/filters-test/my_param_2",
-            "/filters-test/another_param",
-        ]
-        self._create_params(names)
-        list_names = ["/filters-test/my_params_list"]
-        self._create_params(names=list_names, parameter_type="StringList")
-        secure_names = ["/filters-test/my_secure_param"]
-        self._create_params(names=secure_names, parameter_type="SecureString")
+        # the following code was used to generate placebo's files
+        # names = [
+        #     "/filters-test/my_param_1",
+        #     "/filters-test/my_param_2",
+        #     "/filters-test/another_param",
+        # ]
+        # self._create_params(names)
+        # list_names = ["/filters-test/my_params_list"]
+        # self._create_params(names=list_names, parameter_type="StringList")
+        # secure_names = ["/filters-test/my_secure_param"]
+        # self._create_params(names=secure_names, parameter_type="SecureString")
 
 
         group = SSMParameterGroup()
-        
+
         params = group.parameters(
             path="/filters-test",
             filters=[SSMFilterType().value('StringList')],
