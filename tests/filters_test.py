@@ -1,4 +1,4 @@
-""" Test decorator utility """
+""" Test filters support """
 import os
 import sys
 # from moto import mock_ssm
