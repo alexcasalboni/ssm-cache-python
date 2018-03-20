@@ -7,7 +7,7 @@
                 "Version": 1, 
                 "Type": "String", 
                 "Name": "my_param", 
-                "Value": "expected value"
+                "Value": "abc123"
             }
         ]
     }
