@@ -51,6 +51,23 @@ class TestSSMFilters(TestBase):
         self.assertEqual(len(filter_dict['Values']), 1)
         self.assertEqual(filter_dict['Values'][0], 'TestValue')
 
+    def test_filter_interface_invalid(self):
+        """ Test filter interface errors """
+        with self.assertRaises(ValueError):
+            _ = SSMFilter(key="Invalid name")
+
+    def test_filter_max_values(self):
+        """ Test filter interface errors """
+        filter_obj = SSMFilter(
+            key=SSMFilter.KEY_NAME,
+        )
+
+        for index in range(50):
+            filter_obj.value(index)
+
+        with self.assertRaises(ValueError):
+            filter_obj.value("51th value")
+
     def test_filter_option_beginswith(self):
         """ Test filter interface """
         filter_obj = SSMFilter(
