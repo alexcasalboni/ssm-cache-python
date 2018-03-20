@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function
 
 class SSMFilter(object):
-    
+
     KEY_NAME = 'Name'
     KEY_TYPE = 'Type'
     KEY_KEYID = 'KeyId'
@@ -17,7 +17,7 @@ class SSMFilter(object):
     OPTION_BEGINSWITH = 'BeginsWith'
     OPTION_RECURSIVE = 'Recursive'
     OPTION_ONELEVEL = 'OneLevel'
-    OPTION_ALLOWED_VALUES = (OPTION_EQUALS,OPTION_BEGINSWITH)
+    OPTION_ALLOWED_VALUES = (OPTION_EQUALS, OPTION_BEGINSWITH)
     OPTION_PATH_ALLOWED_VALUES = (OPTION_RECURSIVE, OPTION_ONELEVEL)
 
     def __init__(self, key, option=OPTION_EQUALS):
