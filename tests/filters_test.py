@@ -7,7 +7,6 @@ import placebo
 from . import TestBase
 
 # pylint: disable=wrong-import-order,wrong-import-position
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from ssm_cache import SSMParameterGroup
@@ -108,7 +107,7 @@ class TestSSMFilters(TestBase):
     def test_filter_type(self):
         """ Test filter interface """
         filter_obj = SSMFilterType()
-        
+
         filter_dict = filter_obj.to_dict()
         self.assertIn('Key', filter_dict)
         self.assertEqual(filter_dict['Key'], SSMFilter.KEY_TYPE)
@@ -127,7 +126,7 @@ class TestSSMFilters(TestBase):
     def test_filter_keyid(self):
         """ Test filter interface """
         filter_obj = SSMFilterKeyId()
-        
+
         filter_dict = filter_obj.to_dict()
         self.assertIn('Key', filter_dict)
         self.assertEqual(filter_dict['Key'], SSMFilter.KEY_KEYID)
@@ -214,6 +213,4 @@ class TestSSMFilters(TestBase):
         #     filters=[SSMFilterPath().value('my_param_')],
         # )
         # self.assertEqual(len(params), 1)
-
-    
         

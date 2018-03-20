@@ -1,16 +1,16 @@
 """ Test boto3 client ovverride """
-import unittest
 import os
 import sys
 import boto3
 import placebo
+from . import TestBase
 
 # pylint: disable=wrong-import-order,wrong-import-position
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ssm_cache import SSMParameter
 
-class TestClientOverride(unittest.TestCase):
+class TestClientOverride(TestBase):
     """ Refreshable.set_ssm_client tests """
 
     PLACEBO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 'placebo/override'))
