@@ -1,7 +1,11 @@
 """ Define a test base class for all tests """
 import unittest
+import logging
 import boto3
 
+# directly from here: https://github.com/boto/boto3/issues/521
+logging.getLogger('boto3').setLevel(logging.CRITICAL)
+logging.getLogger('botocore').setLevel(logging.CRITICAL)
 
 class TestBase(unittest.TestCase):
     """ Base class with mock values and boto3 client """

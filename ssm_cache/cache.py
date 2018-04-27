@@ -8,6 +8,10 @@ import six
 class InvalidParameterError(Exception):
     """ Raised when something's wrong with the provided param name """
 
+class InvalidPathError(Exception):
+    """ Raised when a given path is not properly structured """
+
+
 class Refreshable(object):
     """ Abstract class for refreshable objects (with max-age) """
 
@@ -45,11 +49,29 @@ class Refreshable(object):
         # force refresh only if max_age seconds have expired
         return datetime.utcnow() > self._last_refresh_time + self._max_age_delta
 
+    def _update_refresh_time(self, keep_oldest_value=False):
+        """
+            Update internal reference with current time.
+            Optionally, keep the oldest available reference
+            (used by groups with multiple fetch operations at potentially different times)
+        """
+        now = datetime.utcnow()
+        if keep_oldest_value and self._last_refresh_time:
+            self._last_refresh_time = min(now, self._last_refresh_time)
+        else:
+            self._last_refresh_time = now
+
     def refresh(self):
         """ Updates the value(s) of this refreshable """
         self._refresh()
         # keep track of update date for max_age checks
-        self._last_refresh_time = datetime.utcnow()
+        self._update_refresh_time()
+
+    @staticmethod
+    def _parse_value(param_value, param_type):
+        if param_type == 'StringList':
+            return param_value.split(',')
+        return param_value
 
     @classmethod
     def _get_parameters(cls, names, with_decryption):
@@ -62,11 +84,27 @@ class Refreshable(object):
             )
             invalid_names.extend(response['InvalidParameters'])
             for item in response['Parameters']:
-                values[item['Name']] = item['Value']
-                if item['Type'] == 'StringList':
-                    values[item['Name']] = values[item['Name']].split(',')
+                values[item['Name']] = cls._parse_value(item['Value'], item['Type'])
 
         return values, invalid_names
+
+    @classmethod
+    def _get_parameters_by_path(cls, with_decryption, path, recursive=True):
+        """ Return all the parameters under the given path """
+        values = {}
+        # paginators doc: http://boto3.readthedocs.io/en/latest/guide/paginators.html
+        pages = cls._get_ssm_client().get_paginator('get_parameters_by_path').paginate(
+            Path=path,
+            Recursive=recursive,
+            WithDecryption=with_decryption,
+            # TODO also support ParameterFilters?
+        )
+        for page in pages:
+            for item in page['Parameters']:
+                values[item['Name']] = cls._parse_value(item['Value'], item['Type'])
+
+        return values
+
 
     def refresh_on_error(
             self,
@@ -84,7 +122,7 @@ class Refreshable(object):
                 """ Actual error/retry handling """
                 try:
                     return func(*args, **kwargs)
-                except error_class:
+                except error_class:  # pylint: disable=broad-except
                     self.refresh()
                     if error_callback:
                         error_callback()
@@ -97,31 +135,69 @@ class Refreshable(object):
 class SSMParameterGroup(Refreshable):
     """ Concrete class that wraps multiple SSM Parameters """
 
-    def __init__(self, max_age=None, with_decryption=True):
+    def __init__(self, max_age=None, with_decryption=True, base_path=""):
         super(SSMParameterGroup, self).__init__(max_age)
 
         self._with_decryption = with_decryption
         self._parameters = {}
+        self._base_path = base_path or ""
+        self._validate_path(base_path)  # may raise
 
-    def parameter(self, name):
-        """ Create a new SSMParameter by name (or retrieve an existing one) """
-        if name in self._parameters:
-            return self._parameters[name]
-        parameter = SSMParameter(name)
+    @staticmethod
+    def _validate_path(path):
+        if path and not path.startswith("/"):
+            raise InvalidPathError("Invalid path: %s (should start with a slash)" % path)
+
+    def parameter(self, path):
+        """ Create a new SSMParameter by name/path (or retrieve an existing one) """
+        if path in self._parameters:
+            return self._parameters[path]
+        if self._base_path:
+            # validate path only if base path is used (otherwise it's just a root name)
+            self._validate_path(path)  # may raise
+            path = "%s%s" % (self._base_path, path)
+        parameter = SSMParameter(path)
         parameter._group = self  # pylint: disable=protected-access
-        self._parameters[name] = parameter
+        self._parameters[path] = parameter
         return parameter
+
+    def parameters(self, path, recursive=True):
+        """ Create new SSMParameter objects by path prefix """
+        self._validate_path(path)  # may raise
+        if self._base_path:
+            path = "%s%s" % (self._base_path, path)
+        items = self._get_parameters_by_path(
+            with_decryption=self._with_decryption,
+            path=path,
+            recursive=recursive,
+        )
+
+        # keep track of update date for max_age checks
+        # if a previous call to `parameters` was made, keep that time reference for caching
+        self._update_refresh_time(keep_oldest_value=True)
+
+        parameters = []
+        # create new parameters and set values
+        for name, value in six.iteritems(items):
+            parameter = self.parameter(name)
+            parameter._value = value  # pylint: disable=protected-access
+            parameters.append(parameter)
+        return parameters
 
     def _refresh(self):
         names = [
             p._name  # pylint: disable=protected-access
-            for p in six.itervalues(self._parameters)
+            for p in self.get_loaded_parameters()
         ]
         values, invalid_names = self._get_parameters(names, self._with_decryption)
         if invalid_names:
             raise InvalidParameterError(",".join(invalid_names))
-        for parameter in six.itervalues(self._parameters):
+        for parameter in self.get_loaded_parameters():
             parameter._value = values[parameter._name]  # pylint: disable=protected-access
+
+    def get_loaded_parameters(self):
+        """ Return a list of SSMParameter objects """
+        return six.itervalues(self._parameters)
 
     def __len__(self):
         return len(self._parameters)
@@ -140,7 +216,7 @@ class SSMParameter(Refreshable):
 
     def _should_refresh(self):
         if self._group:
-            return self._group._should_refresh()
+            return self._group._should_refresh()  # pylint: disable=protected-access
         return super(SSMParameter, self)._should_refresh()
 
     def _refresh(self):

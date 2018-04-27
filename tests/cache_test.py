@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import sys
 from datetime import datetime, timedelta
+from freezegun import freeze_time
 from moto import mock_ssm
 from . import TestBase
 
@@ -47,15 +48,20 @@ class TestSSMCache(TestBase):
         # without max age
         ref = Refreshable(None)
         self.assertFalse(ref._should_refresh())
+
         # with max age and no data
         ref = Refreshable(max_age=10)
         self.assertTrue(ref._should_refresh())
-        # with max age and last refreshed date OK
+
+        # manually force refresh time
         ref._last_refresh_time = datetime.utcnow()
+        # with max age and last refreshed date OK
         self.assertFalse(ref._should_refresh())
-        # with max age and last refreshed date KO
-        ref._last_refresh_time = datetime.utcnow() - timedelta(seconds=20)
-        self.assertTrue(ref._should_refresh())
+
+        # freeze_time will pretend 10 seconds have passed!
+        with freeze_time(lambda: datetime.utcnow() + timedelta(seconds=10)):
+            # with max age and last refreshed date KO
+            self.assertTrue(ref._should_refresh())
 
     def test_refreshable_abstract(self):
         """ Test NotImplementedError on abstract class """
