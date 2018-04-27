@@ -64,6 +64,21 @@ value_1 = param_1.value
 value_2 = param_2.value
 ```
 
+### With hierarchical parameters
+
+You can fetch (and cache) a group of parameters under a given prefix. Optionally, the group itself could have a global prefix.
+
+```python
+from ssm_cache import SSMParameterGroup
+group = SSMParameterGroup(base_path="/Foo")
+foo_bar = group.parameter('/Bar')  # will fetch /Foo/Bar
+baz_params = group.parameters('/Baz')  # will fetch /Foo/Baz/1 and /Foo/Baz/2
+
+assert len(group) == 3
+```
+
+Note: you can call `group.parameters(...)` multiple times. If caching is enabled, the group's cache will expire when the firstly fetched parameters expire.
+
 ### With StringList parameters
 
 `StringList` parameters ([documentation here](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ssm-parameter.html#cfn-ssm-parameter-type)) are automatically converted to Python lists with no additional configuration.
