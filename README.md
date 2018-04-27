@@ -79,7 +79,7 @@ assert len(group) == 3
 
 Note: you can call `group.parameters(...)` multiple times. If caching is enabled, the group's cache will expire when the firstly fetched parameters expire.
 
-#### • Hierarchical parameters and filters
+#### Hierarchical parameters and filters
 
 You can optionally filter by parameter `Type` and KMS `KeyId`, either building the filter object manually or using a class-based approach (which provides some additional checks before invoking the API).
 
@@ -106,7 +106,7 @@ params = group.parameters(
 )
 ```
 
-#### • Hierarchical parameters and non-recursiveness
+#### Hierarchical parameters and non-recursiveness
 
 You can optionally disable recursion when fetching parameters via prefix.
 
