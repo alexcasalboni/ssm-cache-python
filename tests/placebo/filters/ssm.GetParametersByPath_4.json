@@ -3,9 +3,21 @@
     "data": {
         "Parameters": [
             {
-                "Version": 9, 
-                "Type": "SecureString", 
-                "Name": "/filters-test/my_secure_param", 
+                "Version": 20, 
+                "Type": "String", 
+                "Name": "/filters-test/another_param", 
+                "Value": "abc123"
+            }, 
+            {
+                "Version": 20, 
+                "Type": "String", 
+                "Name": "/filters-test/my_param_1", 
+                "Value": "abc123"
+            }, 
+            {
+                "Version": 20, 
+                "Type": "String", 
+                "Name": "/filters-test/my_param_2", 
                 "Value": "abc123"
             }
         ]

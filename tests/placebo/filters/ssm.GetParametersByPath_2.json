@@ -3,10 +3,10 @@
     "data": {
         "Parameters": [
             {
-                "Version": 9, 
-                "Type": "SecureString", 
-                "Name": "/filters-test/my_secure_param", 
-                "Value": "abc123"
+                "Version": 20, 
+                "Type": "StringList", 
+                "Name": "/filters-test/my_params_list", 
+                "Value": "abc123,abc123"
             }
         ]
     }

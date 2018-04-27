@@ -1,23 +1,11 @@
 {
     "status_code": 200, 
     "data": {
-        "Parameters": [
+         "Parameters": [
             {
-                "Version": 9, 
-                "Type": "String", 
-                "Name": "/filters-test/another_param", 
-                "Value": "abc123"
-            }, 
-            {
-                "Version": 9, 
-                "Type": "String", 
-                "Name": "/filters-test/my_param_1", 
-                "Value": "abc123"
-            }, 
-            {
-                "Version": 9, 
-                "Type": "String", 
-                "Name": "/filters-test/my_param_2", 
+                "Version": 20, 
+                "Type": "SecureString", 
+                "Name": "/filters-test/my_secure_param", 
                 "Value": "abc123"
             }
         ]
