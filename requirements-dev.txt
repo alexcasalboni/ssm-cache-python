@@ -7,3 +7,4 @@ pypandoc==1.4
 coveralls==1.2.0
 placebo==0.8.1
 pylint==1.8.2
+freezegun==0.3.10

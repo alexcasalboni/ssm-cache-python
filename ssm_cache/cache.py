@@ -51,11 +51,23 @@ class Refreshable(object):
         # force refresh only if max_age seconds have expired
         return datetime.utcnow() > self._last_refresh_time + self._max_age_delta
 
+    def _update_refresh_time(self, keep_oldest_value=False):
+        """
+            Update internal reference with current time.
+            Optionally, keep the oldest available reference
+            (used by groups with multiple fetch operations at potentially different times)
+        """
+        now = datetime.utcnow()
+        if keep_oldest_value and self._last_refresh_time:
+            self._last_refresh_time = min(now, self._last_refresh_time)
+        else:
+            self._last_refresh_time = now
+
     def refresh(self):
         """ Updates the value(s) of this refreshable """
         self._refresh()
         # keep track of update date for max_age checks
-        self._last_refresh_time = datetime.utcnow()
+        self._update_refresh_time()
 
     @staticmethod
     def _parse_value(param_value, param_type):
@@ -181,6 +193,11 @@ class SSMParameterGroup(Refreshable):
             recursive=recursive,
             filters=filters,
         )
+
+        # keep track of update date for max_age checks
+        # if a previous call to `parameters` was made, keep that time reference for caching
+        self._update_refresh_time(keep_oldest_value=True)
+
         parameters = []
         # create new parameters and set values
         for name, value in six.iteritems(items):

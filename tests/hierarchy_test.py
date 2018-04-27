@@ -2,7 +2,9 @@
 from __future__ import print_function
 import os
 import sys
+from datetime import datetime, timedelta
 from moto import mock_ssm
+from freezegun import freeze_time
 from . import TestBase
 
 # pylint: disable=wrong-import-order,wrong-import-position
@@ -43,6 +45,43 @@ class TestSSMHierarchy(TestBase):
         for parameter in params:
             self.assertEqual(parameter.value, self.PARAM_VALUE)
             self.assertTrue(self.HIERARCHY_PREPATH in parameter.name)
+
+    def test_hierarchy_cache(self):
+        """ Test group hierarchy caching """
+        group = SSMParameterGroup()  # without max age
+        group.parameters(self.HIERARCHY_PREPATH)
+        self.assertFalse(
+            group._should_refresh(),
+            "Cache-less groups shouldn't ever refresh",
+        )
+
+        group = SSMParameterGroup(max_age=10)   # wit max age
+        group.parameters(self.HIERARCHY_PREPATH)
+        self.assertFalse(
+            group._should_refresh(),
+            "Cache-full groups shouldn't need refresh immediately after initialization",
+        )
+
+        group = SSMParameterGroup(max_age=10)   # wit max age
+        group.parameters(self.HIERARCHY_PREPATH)
+        # freeze_time will pretend 10 seconds have passed!
+        with freeze_time(lambda: datetime.utcnow() + timedelta(seconds=10)):
+            self.assertTrue(
+                group._should_refresh(),
+                "Cache-full groups should need refresh after time has passed",
+            )
+
+        group = SSMParameterGroup(max_age=10)   # wit max age
+        group.parameters(self.HIERARCHY_PREPATH)
+        self.assertFalse(group._should_refresh())
+        # freeze_time will pretend 10 seconds have passed!
+        with freeze_time(lambda: datetime.utcnow() + timedelta(seconds=10)):
+            group.parameters(self.HIERARCHY_PREPATH_LIST)
+            self.assertTrue(
+                group._should_refresh(),
+                "Cache-full groups should need refresh based on the oldest fetched params",
+            )
+
 
     def test_hierarchy_with_lists(self):
         """ Test group hierarchy with lists """
