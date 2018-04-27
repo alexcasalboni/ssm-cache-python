@@ -9,7 +9,7 @@ except(IOError, ImportError):
 
 setup(
     name='ssm-cache',
-    version='2.4',
+    version='2.5',
     description='AWS System Manager Parameter Store caching client for Python',
     long_description=LONG_DESCRIPTION,
     keywords=['aws', 'amazon-web-services', 'aws-lambda', 'aws-ssm', 'parameter-store'],
@@ -17,7 +17,7 @@ setup(
     author='Alex Casalboni',
     author_email='alex@alexcasalboni.com',
     url='https://github.com/alexcasalboni/ssm-cache-python',
-    download_url='https://github.com/alexcasalboni/ssm-cache-python/archive/2.4.tar.gz',
+    download_url='https://github.com/alexcasalboni/ssm-cache-python/archive/2.5.tar.gz',
     packages=find_packages(),
     install_requires=['boto3', 'future'],
 )
