@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from functools import wraps
 import six
 
+from ssm_cache.filters import SSMFilter
+
 class InvalidParameterError(Exception):
     """ Raised when something's wrong with the provided param name """
 
@@ -106,6 +108,11 @@ class Refreshable(object):
             else:
                 method = client.get_parameters_by_path
 
+            def serialize_filter(filter_obj):
+                if isinstance(filter_obj, SSMFilter):
+                    return filter_obj.to_dict()
+                return filter_obj
+
             # result will be a list of pages if built-in pagination
             # otherwise a single "page" is expected
             result = method(
@@ -113,7 +120,7 @@ class Refreshable(object):
                 Recursive=recursive,
                 WithDecryption=with_decryption,
                 ParameterFilters=[
-                    filter_obj.to_dict()
+                    serialize_filter(filter_obj)
                     for filter_obj in (filters or [])
                 ],
             )
