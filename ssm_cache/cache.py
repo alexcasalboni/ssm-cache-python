@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from functools import wraps
 import six
 
+from ssm_cache.filters import SSMFilter
+
 class InvalidParameterError(Exception):
     """ Raised when something's wrong with the provided param name """
 
@@ -20,8 +22,10 @@ class Refreshable(object):
     @classmethod
     def set_ssm_client(cls, client):
         """Override the default boto3 SSM client with your own."""
-        if not hasattr(client, 'get_parameters'):
-            raise TypeError('client must have a get_parameters method')
+        required_methods = ('get_parameters', 'get_parameters_by_path')
+        for method in required_methods:
+            if not hasattr(client, method):
+                raise TypeError('client must have a %s method' % method)
         cls._ssm_client = client
 
     @classmethod
@@ -89,17 +93,41 @@ class Refreshable(object):
         return values, invalid_names
 
     @classmethod
-    def _get_parameters_by_path(cls, with_decryption, path, recursive=True):
+    def _get_parameters_by_path(cls, with_decryption, path, recursive=True, filters=None):
         """ Return all the parameters under the given path """
         values = {}
-        # paginators doc: http://boto3.readthedocs.io/en/latest/guide/paginators.html
-        pages = cls._get_ssm_client().get_paginator('get_parameters_by_path').paginate(
-            Path=path,
-            Recursive=recursive,
-            WithDecryption=with_decryption,
-            # TODO also support ParameterFilters?
-        )
-        for page in pages:
+
+        # boto3 paginators doc: http://boto3.readthedocs.io/en/latest/guide/paginators.html
+        client = cls._get_ssm_client()
+        has_builtin_paginator = hasattr(client, 'get_paginator')
+
+        def get_pages():
+            """ Small utility to implement optional pagination (if native boto3 client) """
+            if has_builtin_paginator:
+                method = client.get_paginator('get_parameters_by_path').paginate
+            else:
+                method = client.get_parameters_by_path
+
+            def serialize_filter(filter_obj):
+                if isinstance(filter_obj, SSMFilter):
+                    return filter_obj.to_dict()
+                return filter_obj
+
+            # result will be a list of pages if built-in pagination
+            # otherwise a single "page" is expected
+            result = method(
+                Path=path,
+                Recursive=recursive,
+                WithDecryption=with_decryption,
+                ParameterFilters=[
+                    serialize_filter(filter_obj)
+                    for filter_obj in (filters or [])
+                ],
+            )
+
+            return result if has_builtin_paginator else [result]
+
+        for page in get_pages():
             for item in page['Parameters']:
                 values[item['Name']] = cls._parse_value(item['Value'], item['Type'])
 
@@ -161,7 +189,7 @@ class SSMParameterGroup(Refreshable):
         self._parameters[path] = parameter
         return parameter
 
-    def parameters(self, path, recursive=True):
+    def parameters(self, path, recursive=True, filters=None):
         """ Create new SSMParameter objects by path prefix """
         self._validate_path(path)  # may raise
         if self._base_path:
@@ -170,6 +198,7 @@ class SSMParameterGroup(Refreshable):
             with_decryption=self._with_decryption,
             path=path,
             recursive=recursive,
+            filters=filters,
         )
 
         # keep track of update date for max_age checks

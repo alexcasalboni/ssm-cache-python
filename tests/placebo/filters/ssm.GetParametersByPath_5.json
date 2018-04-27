@@ -1,0 +1,13 @@
+{
+    "status_code": 200, 
+    "data": {
+        "Parameters": [
+            {
+                "Version": 20, 
+                "Type": "SecureString", 
+                "Name": "/filters-test/my_secure_param", 
+                "Value": "abc123"
+            }
+        ]
+    }
+}

@@ -1,4 +1,4 @@
-""" Test ssm_cache/cache.py main functionalities """
+""" Test ssm_cache/cache.py hierarchical params """
 from __future__ import print_function
 import os
 import sys

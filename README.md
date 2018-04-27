@@ -79,6 +79,48 @@ assert len(group) == 3
 
 Note: you can call `group.parameters(...)` multiple times. If caching is enabled, the group's cache will expire when the firstly fetched parameters expire.
 
+#### • Hierarchical parameters and filters
+
+You can optionally filter by parameter `Type` and KMS `KeyId`, either building the filter object manually or using a class-based approach (which provides some additional checks before invoking the API).
+
+```python
+from ssm_cache import SSMParameterGroup
+from ssm_cache.filters import SSMFilterType
+
+group = SSMParameterGroup()
+
+# manual filter definition
+params = group.parameters(
+    path="/Foo/Bar",
+    filters=[{
+        'Key': 'Type',
+        'Option': 'Equals',
+        'Values': ['StringList']
+    }],
+)
+
+# class-based filter
+params = group.parameters(
+    path="/Foo/Bar",
+    filters=[SSMFilterType().value('StringList')],  # will validate allowed value(s)
+)
+```
+
+#### • Hierarchical parameters and non-recursiveness
+
+You can optionally disable recursion when fetching parameters via prefix.
+
+```python
+from ssm_cache import SSMParameterGroup
+group = SSMParameterGroup()
+
+# will fetch /Foo/1, but not /Foo/Bar/1
+params = group.parameters(
+    path="/Foo",
+    recursive=False,
+)
+```
+
 ### With StringList parameters
 
 `StringList` parameters ([documentation here](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ssm-parameter.html#cfn-ssm-parameter-type)) are automatically converted to Python lists with no additional configuration.
