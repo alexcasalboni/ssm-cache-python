@@ -113,13 +113,14 @@ class TestSSMFilters(TestBase):
 
     def test_filter_name(self):
         """ Test filter interface """
-        filter_obj = SSMFilterName()
+        with self.assertRaises(NotImplementedError):
+            filter_obj = SSMFilterName()
 
-        filter_dict = filter_obj.to_dict()
-        self.assertIn('Key', filter_dict)
-        self.assertEqual(filter_dict['Key'], SSMFilter.KEY_NAME)
-        self.assertIn('Option', filter_dict)
-        self.assertEqual(filter_dict['Option'], SSMFilter.OPTION_EQUALS)
+        # filter_dict = filter_obj.to_dict()
+        # self.assertIn('Key', filter_dict)
+        # self.assertEqual(filter_dict['Key'], SSMFilter.KEY_NAME)
+        # self.assertIn('Option', filter_dict)
+        # self.assertEqual(filter_dict['Option'], SSMFilter.OPTION_EQUALS)
 
     def test_filter_type(self):
         """ Test filter interface """
@@ -152,17 +153,18 @@ class TestSSMFilters(TestBase):
 
     def test_filter_path(self):
         """ Test filter interface """
-        filter_obj = SSMFilterPath()
+        with self.assertRaises(NotImplementedError):
+            filter_obj = SSMFilterPath()
 
-        filter_dict = filter_obj.to_dict()
-        self.assertIn('Key', filter_dict)
-        self.assertEqual(filter_dict['Key'], SSMFilter.KEY_PATH)
-        self.assertIn('Option', filter_dict)
-        self.assertEqual(filter_dict['Option'], SSMFilter.OPTION_RECURSIVE)
+        # filter_dict = filter_obj.to_dict()
+        # self.assertIn('Key', filter_dict)
+        # self.assertEqual(filter_dict['Key'], SSMFilter.KEY_PATH)
+        # self.assertIn('Option', filter_dict)
+        # self.assertEqual(filter_dict['Option'], SSMFilter.OPTION_RECURSIVE)
 
     def test_filter_chainability(self):
         """ Test filter interface """
-        filter_obj = SSMFilterName()
+        filter_obj = SSMFilterKeyId()
 
         filter_obj\
             .value('Value1')\
@@ -179,6 +181,9 @@ class TestSSMFilters(TestBase):
 
         filter_dict = filter_obj.to_dict()
         self.assertEqual(len(filter_dict['Values']), 10)
+
+
+
 
     def test_integration(self):
         """ Test filters integration """
@@ -200,6 +205,18 @@ class TestSSMFilters(TestBase):
 
         group = SSMParameterGroup()
 
+        # manual filter definition
+        params = group.parameters(
+            path="/filters-test",
+            filters=[{
+                'Key': 'Type',
+                'Option': 'Equals',
+                'Values': ['StringList']
+            }],
+        )
+        self.assertEqual(len(params), 1)
+
+        # class-based filter
         params = group.parameters(
             path="/filters-test",
             filters=[SSMFilterType().value('StringList')],
@@ -224,10 +241,21 @@ class TestSSMFilters(TestBase):
         )
         self.assertEqual(len(params), 1)
 
+        params = group.parameters(
+            path="/filters-test",
+            filters=[SSMFilterKeyId('BeginsWith').value('alias/')],
+        )
+        self.assertEqual(len(params), 1)
+
         # params = group.parameters(
         #     path="/filters-test",
-        #     # filters=[SSMFilterName('BeginsWith').value('my_param_')],
         #     filters=[SSMFilterPath().value('my_param_')],
+        # )
+        # self.assertEqual(len(params), 1)
+
+        # params = group.parameters(
+        #     path="/filters-test",
+        #     filters=[SSMFilterName('BeginsWith').value('my_param_')],
         # )
         # self.assertEqual(len(params), 1)
         

@@ -58,6 +58,7 @@ class SSMFilter(object):
 class SSMFilterName(SSMFilter):
     def __init__(self, option=SSMFilter.OPTION_EQUALS):
         super(SSMFilterName, self).__init__(self.KEY_NAME, option)
+        raise NotImplementedError("Not implemented yet (by AWS)")
 
 class SSMFilterType(SSMFilter):
 
@@ -81,3 +82,4 @@ class SSMFilterKeyId(SSMFilter):
 class SSMFilterPath(SSMFilter):
     def __init__(self, option=SSMFilter.OPTION_RECURSIVE):
         super(SSMFilterPath, self).__init__(self.KEY_PATH, option)
+        raise NotImplementedError("Not implemented yet (by AWS)")
