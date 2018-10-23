@@ -172,6 +172,30 @@ param = SSMParameter('my_param_name', with_decryption=False)
 value = param.value
 ```
 
+### AWS Secrets Manager Integration
+
+You can read Secrets Manager secrets transparently by using the `SecretsManagerParameter` class, which comes with the same interface of `SSMParameter` and performs some additional prefixing and validation.
+
+```python
+from ssm_cache import SecretsManagerParameter
+secret = SecretsManagerParameter('my_secret_name')
+value = secret.value
+```
+
+Secrets can be added to a `SSMGroup` as well, although no group prefix will be applied.
+
+
+```python
+from ssm_cache import SecretsManagerParameter, SSMGroup
+group = SSMParameterGroup()
+param = group.parameter('my_param')
+secret = group.secret('my_secret')
+
+param_value = param.value
+secret_value = secret.value
+```
+
+
 ## Usage with AWS Lambda
 
 Your [AWS Lambda](https://aws.amazon.com/lambda/) code will look similar to the following snippet.
