@@ -201,12 +201,14 @@ secret_value = secret.value
 Your [AWS Lambda](https://aws.amazon.com/lambda/) code will look similar to the following snippet.
 
 ```python
-from ssm_cache import SSMParameter
+from ssm_cache import SSMParameter, SecretsManagerParameter
 param = SSMParameter('my_param_name')
+secret = SecretsManagerParameter('my_secret_name')
 
 def lambda_handler(event, context):
-    secret_value = param.value
-    return 'Hello from Lambda with secret %s' % secret_value
+    dbname = param.value
+    password = secret.value
+    return 'Hello from Lambda with dbname %s and password %s' % (dbname, password)
 
 ```
 
