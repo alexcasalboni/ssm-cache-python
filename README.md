@@ -182,11 +182,11 @@ secret = SecretsManagerParameter('my_secret_name')
 value = secret.value
 ```
 
-Secrets can be added to a `SSMGroup` as well, although no group prefix will be applied.
+Secrets can be added to a `SSMParameterGroup` as well, although no group prefix will be applied.
 
 
 ```python
-from ssm_cache import SecretsManagerParameter, SSMGroup
+from ssm_cache import SSMParameterGroup
 group = SSMParameterGroup()
 param = group.parameter('my_param')
 secret = group.secret('my_secret')
