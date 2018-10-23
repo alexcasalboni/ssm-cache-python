@@ -109,6 +109,7 @@ class Refreshable(object):
                 method = client.get_parameters_by_path
 
             def serialize_filter(filter_obj):
+                """ Utility function for serialization """
                 if isinstance(filter_obj, SSMFilter):
                     return filter_obj.to_dict()
                 return filter_obj
@@ -213,6 +214,15 @@ class SSMParameterGroup(Refreshable):
             parameters.append(parameter)
         return parameters
 
+    def secret(self, name):
+        """ Create a new SecretsManagerParameter by name (or retrieve an existing one) """
+        if name in self._parameters:
+            return self._parameters[name]
+        parameter = SecretsManagerParameter(name)
+        parameter._group = self  # pylint: disable=protected-access
+        self._parameters[name] = parameter
+        return parameter
+
     def _refresh(self):
         names = [
             p._name  # pylint: disable=protected-access
@@ -269,6 +279,25 @@ class SSMParameter(Refreshable):
         if self._value is None or self._should_refresh():
             self.refresh()
         return self._value
+
+class SecretsManagerParameter(SSMParameter):
+    """ Concrete class for an individual Secrets Manager parameter """
+
+    PREFIX = "/aws/reference/secretsmanager/"
+
+    def __init__(self, param_name, max_age=None, with_decryption=True):
+        param_name = self._add_prefix(param_name)
+        super(SecretsManagerParameter, self).__init__(param_name, max_age, with_decryption)
+
+    @classmethod
+    def _add_prefix(cls, param_name):
+        if not param_name:
+            raise ValueError("Secret name can't be empty")
+        if not param_name.startswith(cls.PREFIX):
+            if param_name.startswith('/'):
+                raise InvalidParameterError(param_name)
+            param_name = "%s%s" % (cls.PREFIX, param_name)
+        return param_name
 
 def _batch(iterable, num):
     """Turn an iterable into an iterable of batches of size n (or less, for the last one)"""
