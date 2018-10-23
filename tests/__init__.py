@@ -4,6 +4,7 @@ import os
 import sys
 import logging
 import boto3
+import botocore
 
 # directly from here: https://github.com/boto/boto3/issues/521
 logging.getLogger('boto3').setLevel(logging.CRITICAL)
@@ -20,6 +21,7 @@ class TestBase(unittest.TestCase):
     PARAM_VALUE = "abc123"
     PARAM_LIST_COUNT = 2
     ssm_client = boto3.client('ssm')
+    secretsmanager_client = boto3.client('secretsmanager')
 
     @classmethod
     def tearDownClass(cls):
@@ -41,3 +43,20 @@ class TestBase(unittest.TestCase):
             if parameter_type == 'SecureString':
                 arguments['KeyId'] = 'alias/aws/ssm'
             self.ssm_client.put_parameter(**arguments)
+
+    def _create_secrets(self, names, value=PARAM_VALUE, parameter_type="SecretString"):
+        for name in names:
+            arguments = dict(
+                Name=name,
+                Description=name,
+            )
+            if parameter_type == 'SecretString':
+                arguments['SecretString'] = value
+            if parameter_type == 'SecretBinary':
+                arguments['SecretBinary'] = value
+            
+            try:
+                #self.secretsmanager_client.describe_secret(SecretId=name)
+                self.secretsmanager_client.create_secret(**arguments)
+            except self.secretsmanager_client.exceptions.ResourceExistsException as ex:
+                print("Secret already exists")
