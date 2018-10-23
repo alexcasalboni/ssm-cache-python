@@ -1,17 +1,15 @@
 """ Setup command """
 from setuptools import setup, find_packages
 
-try:
-    import pypandoc
-    LONG_DESCRIPTION = pypandoc.convert('README.md', 'rst')
-except(IOError, ImportError):
-    LONG_DESCRIPTION = open('README.md').read()
+
+LONG_DESCRIPTION = open('README.md').read()
 
 setup(
     name='ssm-cache',
     version='2.6',
     description='AWS System Manager Parameter Store caching client for Python',
     long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/markdown',
     keywords=['aws', 'amazon-web-services', 'aws-lambda', 'aws-ssm', 'parameter-store'],
     license="MIT",
     author='Alex Casalboni',
