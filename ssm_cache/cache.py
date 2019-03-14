@@ -177,11 +177,11 @@ class SSMParameterGroup(Refreshable):
         if path and not path.startswith("/"):
             raise InvalidPathError("Invalid path: %s (should start with a slash)" % path)
 
-    def parameter(self, path):
+    def parameter(self, path, add_prefix=True):
         """ Create a new SSMParameter by name/path (or retrieve an existing one) """
         if path in self._parameters:
             return self._parameters[path]
-        if self._base_path:
+        if self._base_path and add_prefix:
             # validate path only if base path is used (otherwise it's just a root name)
             self._validate_path(path)  # may raise
             path = "%s%s" % (self._base_path, path)
@@ -209,7 +209,7 @@ class SSMParameterGroup(Refreshable):
         parameters = []
         # create new parameters and set values
         for name, value in six.iteritems(items):
-            parameter = self.parameter(name)
+            parameter = self.parameter(name, add_prefix=False)
             parameter._value = value  # pylint: disable=protected-access
             parameters.append(parameter)
         return parameters
