@@ -4,18 +4,13 @@ import os
 import sys
 from datetime import datetime, timedelta
 from freezegun import freeze_time
-from moto import mock_ssm
 from . import TestBase
 
-# pylint: disable=wrong-import-order,wrong-import-position
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ssm_cache import SSMParameter, SSMParameterGroup, InvalidParameterError
 from ssm_cache.cache import Refreshable
 
 
 # pylint: disable=protected-access
-@mock_ssm
 class TestSSMCache(TestBase):
     """ SSMParameter and SSMParameterGroup tests """
 
