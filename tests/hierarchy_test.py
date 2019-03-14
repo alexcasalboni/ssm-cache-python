@@ -114,9 +114,12 @@ class TestSSMHierarchy(TestBase):
         for parameter in params_1:
             self.assertTrue(self.HIERARCHY_PREPATH in parameter.name)
             self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
+            self.assertTrue(parameter.name.startswith(self.HIERARCHY_PREPATH))
+
         for parameter in params_2:
             self.assertTrue(self.HIERARCHY_PREPATH_LIST in parameter.name)
             self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
+            self.assertTrue(parameter.name.startswith(self.HIERARCHY_PREPATH_LIST))
 
     def test_hierarchy_multiple_overlap(self):
         """ Test group hierarchy multiple overlapping calls """
@@ -143,9 +146,12 @@ class TestSSMHierarchy(TestBase):
         for parameter in params_1:
             self.assertTrue(self.HIERARCHY_PREPATH in parameter.name)
             self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
+            self.assertTrue(parameter.name.startswith(self.HIERARCHY_PREPATH))
+
         for parameter in params_2:
             self.assertTrue(self.HIERARCHY_PREPATH_LIST in parameter.name)
             self.assertTrue(self.HIERARCHY_ROOT in parameter.name)
+            self.assertTrue(parameter.name.startswith(self.HIERARCHY_PREPATH_LIST))
 
     def test_hierarchy_prefix_single(self):
         """ Test group hierarchy prefix with single parameter """
@@ -229,3 +235,4 @@ class TestSSMHierarchy(TestBase):
 
         with self.assertRaises(InvalidPathError):
             _ = group.parameters("InvalidPath")
+
