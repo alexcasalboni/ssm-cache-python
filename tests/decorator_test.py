@@ -2,18 +2,13 @@
 import os
 import sys
 import mock
-from moto import mock_ssm
 from . import TestBase
 
-# pylint: disable=wrong-import-order,wrong-import-position
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ssm_cache import SSMParameter, SSMParameterGroup
 
 class MySpecialError(Exception):
     """ Just for testing """
 
-@mock_ssm
 class TestSSMCacheDecorator(TestBase):
     """ Test Refreshable.refresh_on_error decorator """
 

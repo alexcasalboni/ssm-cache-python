@@ -232,7 +232,9 @@ class SSMParameterGroup(Refreshable):
         if invalid_names:
             raise InvalidParameterError(",".join(invalid_names))
         for parameter in self.get_loaded_parameters():
-            parameter._value = values[parameter._name]  # pylint: disable=protected-access
+            if parameter.name not in values:
+                raise InvalidParameterError(parameter.name)
+            parameter._value = values[parameter.name]
 
     def get_loaded_parameters(self):
         """ Return a list of SSMParameter objects """
@@ -264,8 +266,8 @@ class SSMParameter(Refreshable):
             self._group.refresh()
 
         values, invalid_parameters = self._get_parameters([self._name], self._with_decryption)
-        if invalid_parameters:
-            raise InvalidParameterError(self.name)
+        if invalid_parameters or self._name not in values:
+            raise InvalidParameterError(self._name)
         self._value = values[self._name]
 
     @property

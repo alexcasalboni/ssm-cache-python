@@ -3,18 +3,13 @@ from __future__ import print_function
 import os
 import sys
 from datetime import datetime, timedelta
-from moto import mock_ssm
 from freezegun import freeze_time
 from . import TestBase
 
-# pylint: disable=wrong-import-order,wrong-import-position
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ssm_cache import SSMParameterGroup, SSMParameter, InvalidPathError
 
 
 # pylint: disable=protected-access
-@mock_ssm
 class TestSSMHierarchy(TestBase):
     """ Hierarchical parameters tests """
 

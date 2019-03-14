@@ -1,13 +1,9 @@
 """ Test filters support """
 import os
 import sys
-# from moto import mock_ssm
 import boto3
 import placebo
 from . import TestBase
-
-# pylint: disable=wrong-import-order,wrong-import-position
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from ssm_cache import SSMParameterGroup
 from ssm_cache.filters import (
@@ -19,7 +15,6 @@ from ssm_cache.filters import (
 )
 
 
-# @mock_ssm
 class TestSSMFilters(TestBase):
     """ Test Filters """
 
