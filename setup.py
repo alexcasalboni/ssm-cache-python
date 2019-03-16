@@ -6,7 +6,7 @@ LONG_DESCRIPTION = open('README.md').read()
 
 setup(
     name='ssm-cache',
-    version='2.7',
+    version='2.8',
     description='AWS System Manager Parameter Store caching client for Python',
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
@@ -15,7 +15,7 @@ setup(
     author='Alex Casalboni',
     author_email='alex@alexcasalboni.com',
     url='https://github.com/alexcasalboni/ssm-cache-python',
-    download_url='https://github.com/alexcasalboni/ssm-cache-python/archive/2.7.tar.gz',
+    download_url='https://github.com/alexcasalboni/ssm-cache-python/archive/2.8.tar.gz',
     packages=find_packages(),
     install_requires=['boto3', 'future'],
 )
