@@ -1,4 +1,4 @@
-AWS System Manager Parameter Store Caching Client (Python)
+AWS System Manager Parameter Store Caching Client (Python) [![Python 2.7](https://img.shields.io/badge/python-2.7-green.svg)](https://www.python.org/downloads/release/python-270/) [![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)](https://www.python.org/downloads/release/python-360/) [![Python 3.7](https://img.shields.io/badge/python-3.7-green.svg)](https://www.python.org/downloads/release/python-370/) 
 ==========================================================
 
 [![Build Status](https://travis-ci.org/alexcasalboni/ssm-cache-python.svg?branch=master)](https://travis-ci.org/alexcasalboni/ssm-cache-python)
@@ -209,9 +209,9 @@ param = SSMParameter('my_param_name:2')
 value = param.value
 ```
 
-Please note that invoking `param.refresh()` will not fetch newer versions. This is because the intended behavior for version selection is that you need to use a specific parameter version.
+Please note that invoking `param.refresh()` will not fetch newer versions. This is the intended behavior, as version selection should be used only when you need a specific parameter version.
 
-Event if you don't specify a version, you can always read the current version of a parameter:
+If you don't specify any version, you can always read the current version of a parameter. In this case, invoking `param.refresh()` will invoke the new version.
 
 
 ```python
