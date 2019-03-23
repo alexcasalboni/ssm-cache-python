@@ -1,6 +1,5 @@
 """ Test filters support """
 import os
-import sys
 import boto3
 import placebo
 from . import TestBase
@@ -109,7 +108,7 @@ class TestSSMFilters(TestBase):
     def test_filter_name(self):
         """ Test filter interface """
         with self.assertRaises(NotImplementedError):
-            filter_obj = SSMFilterName()
+            _ = SSMFilterName()
 
         # filter_dict = filter_obj.to_dict()
         # self.assertIn('Key', filter_dict)
@@ -149,7 +148,7 @@ class TestSSMFilters(TestBase):
     def test_filter_path(self):
         """ Test filter interface """
         with self.assertRaises(NotImplementedError):
-            filter_obj = SSMFilterPath()
+            _ = SSMFilterPath()
 
         # filter_dict = filter_obj.to_dict()
         # self.assertIn('Key', filter_dict)

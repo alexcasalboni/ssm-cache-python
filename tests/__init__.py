@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from ssm_cache import SSMParameter, SSMParameterGroup
 
-@mock_ssm
+#@mock_ssm
 @mock_secretsmanager
 class TestBase(unittest.TestCase):
     """ Base class with mock values and boto3 client """
