@@ -1,0 +1,37 @@
+{
+    "status_code": 200, 
+    "data": {
+        "InvalidParameters": [], 
+        "ResponseMetadata": {
+            "RetryAttempts": 0, 
+            "HTTPStatusCode": 200, 
+            "RequestId": "1a6ec765-15cd-4aed-babf-69d386e2f1db", 
+            "HTTPHeaders": {
+                "x-amzn-requestid": "1a6ec765-15cd-4aed-babf-69d386e2f1db", 
+                "date": "Sat, 23 Mar 2019 01:48:54 GMT", 
+                "content-length": "254", 
+                "content-type": "application/x-amz-json-1.1"
+            }
+        }, 
+        "Parameters": [
+            {
+                "Name": "test_versions_group_select", 
+                "LastModifiedDate": {
+                    "hour": 3, 
+                    "__class__": "datetime", 
+                    "month": 3, 
+                    "second": 54, 
+                    "microsecond": 31000, 
+                    "year": 2019, 
+                    "day": 23, 
+                    "minute": 48
+                }, 
+                "Value": "abc123", 
+                "Selector": ":1", 
+                "Version": 1, 
+                "Type": "String", 
+                "ARN": "arn:aws:ssm:eu-west-1:142954310250:parameter/test_versions_group_select"
+            }
+        ]
+    }
+}

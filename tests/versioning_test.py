@@ -36,7 +36,7 @@ class TestSSMVersioning(unittest.TestCase):
     def _setUp(self, subfolder):
         session = boto3.Session()
         pill = placebo.attach(session, data_path=os.path.join(self.PLACEBO_PATH, subfolder))
-        pill.record()
+        pill.playback()
         self.ssm_client = session.client('ssm')
         SSMParameter.set_ssm_client(self.ssm_client)
 
