@@ -4,7 +4,7 @@ import boto3
 import placebo
 from . import TestBase
 
-from ssm_cache import SSMParameterGroup
+from ssm_cache import SSMParameter, SSMParameterGroup
 from ssm_cache.filters import (
     SSMFilter,
     SSMFilterName,
@@ -24,7 +24,7 @@ class TestSSMFilters(TestBase):
         pill = placebo.attach(session, data_path=self.PLACEBO_PATH)
         pill.playback()
         ssm_client = session.client('ssm')
-        SSMParameterGroup.set_ssm_client(ssm_client)
+        SSMParameter.set_ssm_client(ssm_client)
 
     def test_filter_interface(self):
         """ Test filter interface """

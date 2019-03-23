@@ -85,7 +85,7 @@ class Refreshable(object):
         items = {}
         invalid_names = []
         for name_batch in _batch(names, 10): # can only get 10 parameters at a time
-            response = cls._get_ssm_client().get_parameters(
+            response = SSMParameter._get_ssm_client().get_parameters(
                 Names=list(name_batch),
                 WithDecryption=with_decryption,
             )
@@ -102,7 +102,7 @@ class Refreshable(object):
         items = {}
 
         # boto3 paginators doc: http://boto3.readthedocs.io/en/latest/guide/paginators.html
-        client = cls._get_ssm_client()
+        client = SSMParameter._get_ssm_client()
         has_builtin_paginator = hasattr(client, 'get_paginator')
 
         def get_pages():

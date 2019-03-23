@@ -84,7 +84,6 @@ class TestClientOverride(unittest.TestCase):
 
         client = MyValidClient()
         SSMParameter.set_ssm_client(client)
-        SSMParameterGroup.set_ssm_client(client)
 
         param = SSMParameter("my_param")
         self.assertEqual(param.value, self.PARAM_VALUE)

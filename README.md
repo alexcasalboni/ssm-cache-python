@@ -300,7 +300,7 @@ Optionally, you can also customize the `is_retry` argument name. `refresh_on_err
 
 ## Replacing the SSM client
 
-If you want to replace the default `boto3` SSM client, `SSMParameter` and `SSMParameterGroup` both support calling `set_ssm_client` with an object that implements the SSM `get_parameters` method.
+If you want to replace the default `boto3` SSM client, `SSMParameter` allows you to call `set_ssm_client` and provide an object that implements the SSM `get_parameters` and `get_parameters_by_path` methods.
 
 For example, here's how you could inject a Placebo client for local tests:
 

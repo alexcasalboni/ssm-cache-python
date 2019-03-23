@@ -26,12 +26,19 @@ class TestSSMVersioning(unittest.TestCase):
 
     PLACEBO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), 'placebo/versioning'))
     
+    @classmethod
+    def tearDownClass(cls):
+        # pylint: disable=protected-access
+        # reset class-level client for other tests
+        SSMParameter._ssm_client = None
+        SSMParameterGroup._ssm_client = None
+
     def _setUp(self, subfolder):
         session = boto3.Session()
         pill = placebo.attach(session, data_path=os.path.join(self.PLACEBO_PATH, subfolder))
         pill.playback()
         self.ssm_client = session.client('ssm')
-        Refreshable.set_ssm_client(self.ssm_client)
+        SSMParameter.set_ssm_client(self.ssm_client)
 
     def _create_or_update_param(self, name, value=PARAM_VALUE):
         arguments = dict(
