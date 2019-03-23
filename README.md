@@ -16,7 +16,7 @@ AWS System Manager Parameter Store Caching Client for Python ([![Python 2.7](htt
 
 This module wraps the AWS Parameter Store and adds a caching and grouping layer with max-age invalidation.
 
-You can use this module with AWS Lambda to read and refresh sensitive parameters. Your IAM role will require `ssm:GetParameters` permissions (optionally, also `kms:Decrypt` if you use `SecureString` params).
+You can use this module with AWS Lambda to read and refresh parameters and secrets. Your IAM role will require `ssm:GetParameters` permissions (optionally, also `kms:Decrypt` if you use `SecureString` params).
 
 ## How to install
 
@@ -52,7 +52,7 @@ value_2 = param_2.value
 ```
 ### With multiple parameters
 
-You can configure more than one parameter to be fetched/cached (and decrypted or not) together.
+You can configure more than one parameter to be fetched/cached/decrypted as a group.
 
 ```python
 from ssm_cache import SSMParameterGroup
@@ -66,7 +66,7 @@ value_2 = param_2.value
 
 ### With hierarchical parameters
 
-You can fetch (and cache) a group of parameters under a given prefix. Optionally, the group itself could have a global prefix.
+You can fetch/cache a group of parameters under a given prefix. Optionally, the group itself could have its own base path.
 
 ```python
 from ssm_cache import SSMParameterGroup
@@ -81,7 +81,7 @@ Note: you can call `group.parameters(...)` multiple times. If caching is enabled
 
 #### Hierarchical parameters and filters
 
-You can optionally filter by parameter `Type` and KMS `KeyId`, either building the filter object manually or using a class-based approach (which provides some additional checks before invoking the API).
+You can filter by parameter `Type` and KMS `KeyId`, either building the filter object manually or using a class-based approach (which provides some additional checks before invoking the API).
 
 ```python
 from ssm_cache import SSMParameterGroup
@@ -108,7 +108,7 @@ params = group.parameters(
 
 #### Hierarchical parameters and non-recursiveness
 
-You can optionally disable recursion when fetching parameters via prefix.
+You can disable recursion when fetching parameters via prefix.
 
 ```python
 from ssm_cache import SSMParameterGroup
@@ -134,7 +134,7 @@ key, secret, access_token, access_token_secret = twitter_params.value
 ### Explicit refresh
 
 You can manually force a refresh on a parameter or parameter group.
-Note that if a parameter is part of a group, refreshing it will refresh the entire group.
+Note that if a parameter is part of a group, the refresh operation will involve the entire group.
 
 ```python
 from ssm_cache import SSMParameter
@@ -164,7 +164,7 @@ new_new_value_2 = param_2.value # one parameter refreshes the whole group
 
 ### Without decryption
 
-Decryption is enabled by default, but you can explicitly disable it on either an `SSMParameter` or `SSMGroup`.
+Decryption is enabled by default, but you can explicitly disable it (works for `SSMParameter` and `SSMGroup`).
 
 ```python
 from ssm_cache import SSMParameter
@@ -174,7 +174,7 @@ value = param.value
 
 ### AWS Secrets Manager Integration
 
-You can read Secrets Manager secrets transparently by using the `SecretsManagerParameter` class, which comes with the same interface of `SSMParameter` and performs some additional prefixing and validation.
+You can read [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) secrets transparently by using the `SecretsManagerParameter` class, which comes with the same interface of `SSMParameter` and performs some additional prefixing and validation.
 
 ```python
 from ssm_cache import SecretsManagerParameter
@@ -292,7 +292,8 @@ def lambda_handler(event, context):
     }
 ```
 
-Optionally, you can also customize the `is_retry` argument name. `refresh_on_error` supports the following arguments:
+
+The `refresh_on_error` decorator supports the following arguments:
 
 * **error_class** (default: `Exception`)
 * **error_callback** (default: `None`)
@@ -300,7 +301,7 @@ Optionally, you can also customize the `is_retry` argument name. `refresh_on_err
 
 ## Replacing the SSM client
 
-If you want to replace the default `boto3` SSM client, `SSMParameter` allows you to call `set_ssm_client` and provide an object that implements the SSM `get_parameters` and `get_parameters_by_path` methods.
+If you want to replace the default `boto3` SSM client, `SSMParameter` allows you to call `set_ssm_client` and provide your own `boto3` client or even a custom object. Note that such custom object will need to implement two methods: `get_parameters` and `get_parameters_by_path`.
 
 For example, here's how you could inject a Placebo client for local tests:
 
