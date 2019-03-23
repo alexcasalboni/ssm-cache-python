@@ -1,0 +1,20 @@
+{
+    "status_code": 200, 
+    "data": {
+        "InvalidParameters": [
+            "test_versions_unexisting:10"
+        ], 
+        "ResponseMetadata": {
+            "RetryAttempts": 0, 
+            "HTTPStatusCode": 200, 
+            "RequestId": "4eac1348-6330-413a-b30f-74f23972c762", 
+            "HTTPHeaders": {
+                "x-amzn-requestid": "4eac1348-6330-413a-b30f-74f23972c762", 
+                "date": "Sat, 23 Mar 2019 00:14:25 GMT", 
+                "content-length": "69", 
+                "content-type": "application/x-amz-json-1.1"
+            }
+        }, 
+        "Parameters": []
+    }
+}

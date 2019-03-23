@@ -13,6 +13,9 @@ class InvalidParameterError(Exception):
 class InvalidPathError(Exception):
     """ Raised when a given path is not properly structured """
 
+class InvalidVersionError(Exception):
+    """ Raised when something's wrong with the provided param version """
+
 
 class Refreshable(object):
     """ Abstract class for refreshable objects (with max-age) """
@@ -79,26 +82,27 @@ class Refreshable(object):
 
     @classmethod
     def _get_parameters(cls, names, with_decryption):
-        values = {}
+        items = {}
         invalid_names = []
         for name_batch in _batch(names, 10): # can only get 10 parameters at a time
-            response = cls._get_ssm_client().get_parameters(
+            response = SSMParameter._get_ssm_client().get_parameters(
                 Names=list(name_batch),
                 WithDecryption=with_decryption,
             )
             invalid_names.extend(response['InvalidParameters'])
             for item in response['Parameters']:
-                values[item['Name']] = cls._parse_value(item['Value'], item['Type'])
+                item['Value'] = cls._parse_value(item['Value'], item['Type'])
+                items[item['Name']] = item
 
-        return values, invalid_names
+        return items, invalid_names
 
     @classmethod
     def _get_parameters_by_path(cls, with_decryption, path, recursive=True, filters=None):
         """ Return all the parameters under the given path """
-        values = {}
+        items = {}
 
         # boto3 paginators doc: http://boto3.readthedocs.io/en/latest/guide/paginators.html
-        client = cls._get_ssm_client()
+        client = SSMParameter._get_ssm_client()
         has_builtin_paginator = hasattr(client, 'get_paginator')
 
         def get_pages():
@@ -130,9 +134,10 @@ class Refreshable(object):
 
         for page in get_pages():
             for item in page['Parameters']:
-                values[item['Name']] = cls._parse_value(item['Value'], item['Type'])
+                item['Value'] = cls._parse_value(item['Value'], item['Type'])
+                items[item['Name']] = item
 
-        return values
+        return items
 
 
     def refresh_on_error(
@@ -208,9 +213,10 @@ class SSMParameterGroup(Refreshable):
 
         parameters = []
         # create new parameters and set values
-        for name, value in six.iteritems(items):
+        for name, item in six.iteritems(items):
             parameter = self.parameter(name, add_prefix=False)
-            parameter._value = value  # pylint: disable=protected-access
+            parameter._value = item['Value']  # pylint: disable=protected-access
+            parameter._version = item['Version']  # pylint: disable=protected-access
             parameters.append(parameter)
         return parameters
 
@@ -224,17 +230,19 @@ class SSMParameterGroup(Refreshable):
         return parameter
 
     def _refresh(self):
+        # pylint: disable=protected-access
         names = [
-            p._name  # pylint: disable=protected-access
-            for p in self.get_loaded_parameters()
+            param.full_name
+            for param in self.get_loaded_parameters()
         ]
-        values, invalid_names = self._get_parameters(names, self._with_decryption)
+        items, invalid_names = self._get_parameters(names, self._with_decryption)
         if invalid_names:
             raise InvalidParameterError(",".join(invalid_names))
         for parameter in self.get_loaded_parameters():
-            if parameter.name not in values:
+            if parameter.name not in items:
                 raise InvalidParameterError(parameter.name)
-            parameter._value = values[parameter.name]
+            parameter._value = items[parameter.name]['Value']
+            parameter._version = items[parameter.name]['Version']
 
     def get_loaded_parameters(self):
         """ Return a list of SSMParameter objects """
@@ -250,10 +258,29 @@ class SSMParameter(Refreshable):
         super(SSMParameter, self).__init__(max_age)
         if not param_name:
             raise ValueError("Must specify name")
-        self._name = param_name
+
+        self._name, self._version, self._is_pinned_version = self._parse_version(param_name)
+
         self._value = None
         self._with_decryption = with_decryption
         self._group = None
+
+    @staticmethod
+    def _parse_version(param_name):
+        """ Extracts version from full name, if provided """
+
+        name, version, is_pinned_version = param_name, None, False
+
+        if ":" in param_name:
+            name, version = param_name.split(':')
+
+            if version.isdigit() and int(version) > 0:
+                version = int(version)
+                is_pinned_version = True
+            else:
+                raise InvalidVersionError("Invalid version: %s" % version)
+
+        return name, version, is_pinned_version
 
     def _should_refresh(self):
         if self._group:
@@ -265,15 +292,30 @@ class SSMParameter(Refreshable):
         if self._group:
             self._group.refresh()
 
-        values, invalid_parameters = self._get_parameters([self._name], self._with_decryption)
-        if invalid_parameters or self._name not in values:
-            raise InvalidParameterError(self._name)
-        self._value = values[self._name]
+        items, invalid_parameters = self._get_parameters([self.full_name], self._with_decryption)
+        if invalid_parameters or self._name not in items:
+            raise InvalidParameterError("%s is invalid. %s - %s" % (self._name, invalid_parameters, items))
+        self._value = items[self._name]['Value']
+        self._version = items[self._name]['Version']
 
     @property
     def name(self):
         """ Just an alias """
         return self._name
+
+    @property
+    def full_name(self):
+        """ name + version """
+        if self._version and self._is_pinned_version:
+            return "%s:%s" % (self._name, self._version)
+        return self._name
+
+    @property
+    def version(self):
+        """ Just an alias """
+        if self._version is None or self._should_refresh():
+            self.refresh()
+        return self._version
 
     @property
     def value(self):

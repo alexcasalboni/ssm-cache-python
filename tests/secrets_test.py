@@ -1,9 +1,5 @@
 """ Test ssm_cache/cache.py main functionalities """
 from __future__ import print_function
-import os
-import sys
-from datetime import datetime, timedelta
-from freezegun import freeze_time
 from moto import mock_ssm, mock_secretsmanager
 from . import TestBase
 

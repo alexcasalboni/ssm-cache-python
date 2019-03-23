@@ -59,6 +59,7 @@ class TestClientOverride(unittest.TestCase):
                             "Type": "String",
                             "Name": "my_param",
                             "Value": "abc123",
+                            "Version": 1
                         },
                     ],
                 }
@@ -70,18 +71,19 @@ class TestClientOverride(unittest.TestCase):
                             "Type": "String",
                             "Name": "/foo/bar/1",
                             "Value": "abc123",
+                            "Version": 1
                         },
                         {
                             "Type": "String",
                             "Name": "/foo/bar/2",
                             "Value": "abc123",
+                            "Version": 1
                         },
                     ]
                 }
 
         client = MyValidClient()
         SSMParameter.set_ssm_client(client)
-        SSMParameterGroup.set_ssm_client(client)
 
         param = SSMParameter("my_param")
         self.assertEqual(param.value, self.PARAM_VALUE)

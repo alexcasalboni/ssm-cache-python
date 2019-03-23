@@ -195,6 +195,32 @@ param_value = param.value
 secret_value = secret.value
 ```
 
+### Versioning support
+
+SSM Parameter Store supports version selectors ([documentation here](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-versions.html)).
+
+By default, the latest version is fetched if you don't specify it.
+
+Here is how you can retrieve a specific parameter version:
+
+```python
+from ssm_cache import SSMParameter
+param = SSMParameter('my_param_name:2')
+value = param.value
+```
+
+Please note that invoking `param.refresh()` will not fetch newer versions. This is because the intended behavior for version selection is that you need to use a specific parameter version.
+
+Event if you don't specify a version, you can always read the current version of a parameter:
+
+
+```python
+from ssm_cache import SSMParameter
+param = SSMParameter('my_param_name')
+print(param.version)  # will print an int
+```
+
+
 
 ## Usage with AWS Lambda
 
@@ -274,7 +300,7 @@ Optionally, you can also customize the `is_retry` argument name. `refresh_on_err
 
 ## Replacing the SSM client
 
-If you want to replace the default `boto3` SSM client, `SSMParameter` and `SSMParameterGroup` both support calling `set_ssm_client` with an object that implements the SSM `get_parameters` method.
+If you want to replace the default `boto3` SSM client, `SSMParameter` allows you to call `set_ssm_client` and provide an object that implements the SSM `get_parameters` and `get_parameters_by_path` methods.
 
 For example, here's how you could inject a Placebo client for local tests:
 

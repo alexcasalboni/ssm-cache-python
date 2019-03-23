@@ -4,5 +4,6 @@ from ssm_cache.cache import (
     SSMParameterGroup,
     SecretsManagerParameter,
     InvalidParameterError,
+    InvalidVersionError,
     InvalidPathError,
 )
