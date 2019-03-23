@@ -259,7 +259,7 @@ class SSMParameter(Refreshable):
         if not param_name:
             raise ValueError("Must specify name")
 
-        self._name, self._version = self._parse_version(param_name)
+        self._name, self._version, self._is_pinned_version = self._parse_version(param_name)
 
         self._value = None
         self._with_decryption = with_decryption
@@ -269,17 +269,18 @@ class SSMParameter(Refreshable):
     def _parse_version(param_name):
         """ Extracts version from full name, if provided """
 
-        name, version = param_name, None
+        name, version, is_pinned_version = param_name, None, False
 
         if ":" in param_name:
             name, version = param_name.split(':')
 
             if version.isdigit() and int(version) > 0:
                 version = int(version)
+                is_pinned_version = True
             else:
                 raise InvalidVersionError("Invalid version: %s" % version)
 
-        return name, version
+        return name, version, is_pinned_version
 
     def _should_refresh(self):
         if self._group:
@@ -293,7 +294,7 @@ class SSMParameter(Refreshable):
 
         items, invalid_parameters = self._get_parameters([self.full_name], self._with_decryption)
         if invalid_parameters or self._name not in items:
-            raise InvalidParameterError(self._name)
+            raise InvalidParameterError("%s is invalid. %s - %s" % (self._name, invalid_parameters, items))
         self._value = items[self._name]['Value']
         self._version = items[self._name]['Version']
 
@@ -305,7 +306,7 @@ class SSMParameter(Refreshable):
     @property
     def full_name(self):
         """ name + version """
-        if self._version:
+        if self._version and self._is_pinned_version:
             return "%s:%s" % (self._name, self._version)
         return self._name
 
