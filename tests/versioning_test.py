@@ -36,7 +36,7 @@ class TestSSMVersioning(unittest.TestCase):
     def _setUp(self, subfolder):
         session = boto3.Session()
         pill = placebo.attach(session, data_path=os.path.join(self.PLACEBO_PATH, subfolder))
-        pill.playback()
+        pill.record()
         self.ssm_client = session.client('ssm')
         SSMParameter.set_ssm_client(self.ssm_client)
 
@@ -48,6 +48,12 @@ class TestSSMVersioning(unittest.TestCase):
             Overwrite=True,
         )
         self.ssm_client.put_parameter(**arguments)
+
+    def _delete_param(self, name):
+        arguments = dict(
+            Name=name,
+        )
+        self.ssm_client.delete_parameter(**arguments)
 
 
     def test_update_versions(self):
@@ -69,14 +75,12 @@ class TestSSMVersioning(unittest.TestCase):
 
         param.refresh()
 
-        # refreshing should still give you version 1
-        self.assertEqual(param.version, 1)
-        self.assertEqual(param.value, self.PARAM_VALUE)
+        # refreshing should give you version 2
+        self.assertEqual(param.version, 2)
+        self.assertEqual(param.value, self.PARAM_VALUE_V2)
 
-        same_param = SSMParameter(name)
+        self._delete_param(name)
 
-        self.assertEqual(same_param.version, 2)
-        self.assertEqual(same_param.value, self.PARAM_VALUE_V2)
 
     def test_select_versions(self):
         """ Test version selection """
@@ -87,13 +91,21 @@ class TestSSMVersioning(unittest.TestCase):
         name = method_name
         self._create_or_update_param(name)
 
-        # this will update the value and create version 2
-        self._create_or_update_param(name, self.PARAM_VALUE_V2)
-
         param = SSMParameter("%s:1" % name)
 
         self.assertEqual(param.value, self.PARAM_VALUE)
         self.assertEqual(param.version, 1)
+
+        # this will update the value and create version 2
+        self._create_or_update_param(name, self.PARAM_VALUE_V2)
+
+        param.refresh()
+
+        self.assertEqual(param.value, self.PARAM_VALUE)
+        self.assertEqual(param.version, 1)
+
+        self._delete_param(name)
+        
 
     def test_versions_unexisting(self):
         """ Test non existing version """
@@ -107,6 +119,8 @@ class TestSSMVersioning(unittest.TestCase):
 
         with self.assertRaises(InvalidParameterError):
             print(param.value)
+
+        self._delete_param(name)
 
     def test_versions_invalid(self):
         """ Test invalid version """
@@ -144,15 +158,12 @@ class TestSSMVersioning(unittest.TestCase):
 
         group.refresh()
 
-        # refreshing should still give you version 1
-        self.assertEqual(param.version, 1)
-        self.assertEqual(param.value, self.PARAM_VALUE)
+        # refreshing should give you version 2
+        self.assertEqual(param.version, 2)
+        self.assertEqual(param.value, self.PARAM_VALUE_V2)
 
-        same_group = SSMParameterGroup()
-        same_param = same_group.parameter(name)
+        self._delete_param(name)
 
-        self.assertEqual(same_param.version, 2)
-        self.assertEqual(same_param.value, self.PARAM_VALUE_V2)
 
     def test_versions_group_select(self):
         """ Test version selection in a group """
@@ -170,3 +181,5 @@ class TestSSMVersioning(unittest.TestCase):
 
         self.assertEqual(param.version, 1)
         self.assertEqual(param.value, self.PARAM_VALUE)
+
+        self._delete_param(name)

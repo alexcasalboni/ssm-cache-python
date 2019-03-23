@@ -5,11 +5,11 @@
         "ResponseMetadata": {
             "RetryAttempts": 0, 
             "HTTPStatusCode": 200, 
-            "RequestId": "671d1f87-c8dc-4557-93ef-f2a0186a6a94", 
+            "RequestId": "e183bd57-e81a-4c8e-a488-2e1f716c0e2b", 
             "HTTPHeaders": {
-                "x-amzn-requestid": "671d1f87-c8dc-4557-93ef-f2a0186a6a94", 
-                "date": "Sat, 23 Mar 2019 00:14:19 GMT", 
-                "content-length": "242", 
+                "x-amzn-requestid": "e183bd57-e81a-4c8e-a488-2e1f716c0e2b", 
+                "date": "Sat, 23 Mar 2019 01:47:26 GMT", 
+                "content-length": "226", 
                 "content-type": "application/x-amz-json-1.1"
             }
         }, 
@@ -17,18 +17,17 @@
             {
                 "Name": "test_update_versions", 
                 "LastModifiedDate": {
-                    "hour": 2, 
+                    "hour": 3, 
                     "__class__": "datetime", 
                     "month": 3, 
-                    "second": 19, 
-                    "microsecond": 582000, 
+                    "second": 27, 
+                    "microsecond": 493000, 
                     "year": 2019, 
                     "day": 23, 
-                    "minute": 14
+                    "minute": 47
                 }, 
-                "Value": "abc123", 
-                "Selector": ":1", 
-                "Version": 1, 
+                "Value": "789xyz", 
+                "Version": 2, 
                 "Type": "String", 
                 "ARN": "arn:aws:ssm:eu-west-1:142954310250:parameter/test_update_versions"
             }

@@ -5,31 +5,32 @@
         "ResponseMetadata": {
             "RetryAttempts": 0, 
             "HTTPStatusCode": 200, 
-            "RequestId": "17830cfc-4548-4c71-994f-68cd77cabe4b", 
+            "RequestId": "dbf7b9a1-61fc-4ae3-a78c-8e068a311826", 
             "HTTPHeaders": {
-                "x-amzn-requestid": "17830cfc-4548-4c71-994f-68cd77cabe4b", 
-                "date": "Sat, 23 Mar 2019 01:47:28 GMT", 
-                "content-length": "224", 
+                "x-amzn-requestid": "dbf7b9a1-61fc-4ae3-a78c-8e068a311826", 
+                "date": "Sat, 23 Mar 2019 01:47:25 GMT", 
+                "content-length": "242", 
                 "content-type": "application/x-amz-json-1.1"
             }
         }, 
         "Parameters": [
             {
-                "Name": "test_versions_group", 
+                "Name": "test_select_versions", 
                 "LastModifiedDate": {
                     "hour": 3, 
                     "__class__": "datetime", 
                     "month": 3, 
-                    "second": 29, 
-                    "microsecond": 551000, 
+                    "second": 25, 
+                    "microsecond": 235000, 
                     "year": 2019, 
                     "day": 23, 
                     "minute": 47
                 }, 
-                "Value": "789xyz", 
-                "Version": 2, 
+                "Value": "abc123", 
+                "Selector": ":1", 
+                "Version": 1, 
                 "Type": "String", 
-                "ARN": "arn:aws:ssm:eu-west-1:142954310250:parameter/test_versions_group"
+                "ARN": "arn:aws:ssm:eu-west-1:142954310250:parameter/test_select_versions"
             }
         ]
     }

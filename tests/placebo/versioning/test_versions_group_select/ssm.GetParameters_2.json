@@ -5,10 +5,10 @@
         "ResponseMetadata": {
             "RetryAttempts": 0, 
             "HTTPStatusCode": 200, 
-            "RequestId": "ef147ddb-f7eb-4eff-8ea1-9336f5e6fb72", 
+            "RequestId": "a3aa84e3-1ea4-4aaf-b1b1-a47ede6715ef", 
             "HTTPHeaders": {
-                "x-amzn-requestid": "ef147ddb-f7eb-4eff-8ea1-9336f5e6fb72", 
-                "date": "Sat, 23 Mar 2019 00:14:24 GMT", 
+                "x-amzn-requestid": "a3aa84e3-1ea4-4aaf-b1b1-a47ede6715ef", 
+                "date": "Sat, 23 Mar 2019 01:47:30 GMT", 
                 "content-length": "254", 
                 "content-type": "application/x-amz-json-1.1"
             }
@@ -17,14 +17,14 @@
             {
                 "Name": "test_versions_group_select", 
                 "LastModifiedDate": {
-                    "hour": 2, 
+                    "hour": 3, 
                     "__class__": "datetime", 
                     "month": 3, 
-                    "second": 24, 
-                    "microsecond": 93000, 
+                    "second": 31, 
+                    "microsecond": 85000, 
                     "year": 2019, 
                     "day": 23, 
-                    "minute": 14
+                    "minute": 47
                 }, 
                 "Value": "abc123", 
                 "Selector": ":1", 
