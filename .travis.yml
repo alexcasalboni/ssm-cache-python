@@ -3,6 +3,7 @@ sudo: false
 python:
   - 2.7
   - 3.6
+  - 3.7
 env:
     - AWS_DEFAULT_REGION=eu-west-1 AWS_ACCESS_KEY_ID=dummy AWS_SECRET_ACCESS_KEY=dummy BOTO_CONFIG=/dev/null
 install:
