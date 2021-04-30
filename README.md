@@ -355,6 +355,7 @@ Note: when you open a new PR, GitHub will run tests on multiple Python environme
 
 ## What's new?
 
+* **version 2.10**: exclude tests folder from site-packages
 * **version 2.9**: bugfix, versioning support, tests with Python 3.7
 * **version 2.8**: bugfix, new tests, fixed Travis build config
 * **version 2.7**: support for AWS Secrets Manager integration
