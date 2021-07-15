@@ -1,7 +1,7 @@
 AWS System Manager Parameter Store Caching Client for Python ([![Python 2.7](https://img.shields.io/badge/python-2.7-green.svg)](https://www.python.org/downloads/release/python-270/) [![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)](https://www.python.org/downloads/release/python-360/) [![Python 3.7](https://img.shields.io/badge/python-3.7-green.svg)](https://www.python.org/downloads/release/python-370/))
 ==========================================================
 
-[![Build Status](https://travis-ci.org/alexcasalboni/ssm-cache-python.svg?branch=master)](https://travis-ci.org/alexcasalboni/ssm-cache-python)
+[![Build Status](https://github.com/alexcasalboni/ssm-cache-python/actions/workflows/tests.yml/badge.svg)](https://github.com/alexcasalboni/ssm-cache-python/actions/workflows/tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/alexcasalboni/ssm-cache-python/badge.svg)](https://coveralls.io/github/alexcasalboni/ssm-cache-python)
 [![PyPI version](https://badge.fury.io/py/ssm-cache.svg)](https://badge.fury.io/py/ssm-cache)
 [![GitHub license](https://img.shields.io/github/license/alexcasalboni/ssm-cache-python.svg)](https://github.com/alexcasalboni/ssm-cache-python/blob/master/LICENSE)
