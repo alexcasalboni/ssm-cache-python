@@ -1,3 +1,9 @@
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Any
+
+
 class SSMFilter:
     KEY_NAME = "Name"
     KEY_TYPE = "Type"
@@ -17,14 +23,14 @@ class SSMFilter:
     OPTION_ALLOWED_VALUES = (OPTION_EQUALS, OPTION_BEGINSWITH)
     OPTION_PATH_ALLOWED_VALUES = (OPTION_RECURSIVE, OPTION_ONELEVEL)
 
-    def __init__(self, key, option=OPTION_EQUALS):
+    def __init__(self, key: str, option: str = OPTION_EQUALS) -> None:
         self._validate_config(key, option)
         self._key = key
         self._option = option
-        self._values = set()
+        self._values: set[str] = set()
 
     @classmethod
-    def _validate_config(cls, key, option):
+    def _validate_config(cls, key: str, option: str) -> None:
         if key not in cls.KEY_ALLOWED_VALUES:
             raise ValueError(f"Invalid key value: {key}")
         if key != cls.KEY_PATH and option not in cls.OPTION_ALLOWED_VALUES:
@@ -32,19 +38,19 @@ class SSMFilter:
         if key == cls.KEY_PATH and option not in cls.OPTION_PATH_ALLOWED_VALUES:
             raise ValueError(f"Invalid option value for Path key: {option}")
 
-    def value(self, value):
+    def value(self, value: str) -> SSMFilter:
         if len(self._values) == 50:
             raise ValueError("You can't set more than 50 values for each filter.")
         self._values.add(value)
         return self  # chainable
 
-    def values(self, values):
+    def values(self, values: Iterable[str]) -> SSMFilter:
         for value in values:
             self.value(value)
         return self  # chainable
 
-    def to_dict(self):
-        filter_dict = {
+    def to_dict(self) -> dict[str, Any]:
+        filter_dict: dict[str, Any] = {
             "Key": self._key,
             "Option": self._option,
         }
@@ -54,7 +60,7 @@ class SSMFilter:
 
 
 class SSMFilterName(SSMFilter):
-    def __init__(self, option=SSMFilter.OPTION_EQUALS):
+    def __init__(self, option: str = SSMFilter.OPTION_EQUALS) -> None:
         super().__init__(self.KEY_NAME, option)
         raise NotImplementedError("Not implemented yet (by AWS)")
 
@@ -65,21 +71,21 @@ class SSMFilterType(SSMFilter):
     TYPE_SECURESTRING = "SecureString"
     TYPE_ALLOWED_VALUES = (TYPE_STRING, TYPE_STRINGLIST, TYPE_SECURESTRING)
 
-    def __init__(self, option=SSMFilter.OPTION_EQUALS):
+    def __init__(self, option: str = SSMFilter.OPTION_EQUALS) -> None:
         super().__init__(self.KEY_TYPE, option)
 
-    def value(self, value):
+    def value(self, value: str) -> SSMFilter:
         if value not in self.TYPE_ALLOWED_VALUES:
             raise ValueError(f"Invalid value for Type filter: {value}")
         return super().value(value)
 
 
 class SSMFilterKeyId(SSMFilter):
-    def __init__(self, option=SSMFilter.OPTION_EQUALS):
+    def __init__(self, option: str = SSMFilter.OPTION_EQUALS) -> None:
         super().__init__(self.KEY_KEYID, option)
 
 
 class SSMFilterPath(SSMFilter):
-    def __init__(self, option=SSMFilter.OPTION_RECURSIVE):
+    def __init__(self, option: str = SSMFilter.OPTION_RECURSIVE) -> None:
         super().__init__(self.KEY_PATH, option)
         raise NotImplementedError("Not implemented yet (by AWS)")

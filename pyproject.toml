@@ -40,11 +40,15 @@ dev = [
     "placebo>=0.10.0",
     # code quality
     "ruff>=0.15",
+    "mypy>=1.11",
     "coveralls>=4.0",
 ]
 
 [tool.setuptools.packages.find]
 exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+ssm_cache = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths   = ["tests"]
@@ -79,3 +83,13 @@ select = [
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.mypy]
+files = ["ssm_cache"]
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[[tool.mypy.overrides]]
+# boto3/botocore are imported lazily and ship limited type information
+module = ["boto3.*", "botocore.*"]
+ignore_missing_imports = true

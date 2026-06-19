@@ -19,14 +19,17 @@ jobs:
           python-version: "3.13"
           cache: pip
 
-      - name: Install ruff
-        run: pip install "ruff>=0.15"
+      - name: Install ruff and mypy
+        run: pip install "ruff>=0.15" "mypy>=1.11"
 
       - name: Check formatting
         run: ruff format --check .
 
       - name: Check lint
         run: ruff check .
+
+      - name: Check types
+        run: mypy
 
   test:
     name: Test (Python ${{ matrix.python-version }})

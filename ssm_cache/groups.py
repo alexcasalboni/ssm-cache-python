@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from collections.abc import Iterable, Sequence
+from typing import Any
+
 from ssm_cache.exceptions import (
     InvalidParameterError,
     InvalidPathError,
@@ -12,21 +17,26 @@ from ssm_cache.refreshable import Refreshable
 class SSMParameterGroup(Refreshable):
     """Concrete class that wraps multiple SSM Parameters."""
 
-    def __init__(self, max_age=None, with_decryption=True, base_path=""):
+    def __init__(
+        self,
+        max_age: int | None = None,
+        with_decryption: bool = True,
+        base_path: str = "",
+    ) -> None:
         super().__init__(max_age)
 
         self._with_decryption = with_decryption
-        self._parameters = {}
+        self._parameters: dict[str, SSMParameter] = {}
         self._base_path = base_path or ""
 
         self._validate_path(base_path)
 
     @staticmethod
-    def _validate_path(path):
+    def _validate_path(path: str) -> None:
         if path and not path.startswith("/"):
             raise InvalidPathError(f"Invalid path: {path} (should start with a slash)")
 
-    def parameter(self, path, add_prefix=True):
+    def parameter(self, path: str, add_prefix: bool = True) -> SSMParameter:
         if path in self._parameters:
             return self._parameters[path]
 
@@ -41,7 +51,12 @@ class SSMParameterGroup(Refreshable):
 
         return parameter
 
-    def parameters(self, path, recursive=True, filters=None):
+    def parameters(
+        self,
+        path: str,
+        recursive: bool = True,
+        filters: Sequence[Any] | None = None,
+    ) -> list[SSMParameter]:
         self._validate_path(path)
 
         if self._base_path:
@@ -68,9 +83,9 @@ class SSMParameterGroup(Refreshable):
 
         return parameters
 
-    def secret(self, name):
+    def secret(self, name: str) -> SecretsManagerParameter:
         if name in self._parameters:
-            return self._parameters[name]
+            return self._parameters[name]  # type: ignore[return-value]
 
         parameter = SecretsManagerParameter(name)
         parameter._group = self
@@ -79,7 +94,7 @@ class SSMParameterGroup(Refreshable):
 
         return parameter
 
-    def _refresh(self):
+    def _refresh(self) -> None:
         names = [param.full_name for param in self.get_loaded_parameters()]
 
         items, invalid_names = self._get_parameters(
@@ -99,8 +114,8 @@ class SSMParameterGroup(Refreshable):
                 version=items[parameter.name]["Version"],
             )
 
-    def get_loaded_parameters(self):
+    def get_loaded_parameters(self) -> Iterable[SSMParameter]:
         return self._parameters.values()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._parameters)
