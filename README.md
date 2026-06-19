@@ -386,7 +386,7 @@ ruff format .
 
 The CI `lint` job runs both `ruff format --check` and `ruff check` on every push and pull request before the test matrix starts. A failing lint check blocks the test run.
 
-Opening a PR triggers the GitHub Actions CI matrix across Python 3.8–3.13 and uploads coverage to Coveralls automatically.
+Opening a PR triggers the GitHub Actions CI matrix across Python 3.10–3.14 and uploads coverage to Coveralls automatically.
 
 ### Test layout
 
@@ -405,8 +405,8 @@ Test files mirror the package modules:
 ## What's new?
 
 * **version 3.0.0**: 
-  * dropped support for Python <3.8
-  * Python 3.8–3.13 supported and tested
+  * dropped support for Python <3.10 (3.8 and 3.9 are end-of-life)
+  * Python 3.10–3.14 supported and tested
   * split monolithic `cache.py` into logically grouped modules (`exceptions`, `filters`, `groups`, `parameters`, `refreshable`, `utils`)
   * `__version__` added to package
   * `pyproject.toml` replaces `setup.py` and `requirements*.txt`
